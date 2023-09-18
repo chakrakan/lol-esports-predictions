@@ -1,0 +1,14 @@
+# ipython files
+**/.ipynb_checkpoints
+__pycache__
+
+
+# OS generated files #
+######################
+.DS_Store*
+
+# Things specific to this project #
+###################################
+/.anaconda
+/.envs
+/env
