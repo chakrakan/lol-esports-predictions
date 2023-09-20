@@ -12,5 +12,7 @@ __pycache__
 /.anaconda
 /.envs
 /env
-./esports-data/tournaments.json
-./esports-data/tournaments.csv
+/esports-data
+/lol-esports-data
+/games
+/games-parquet
