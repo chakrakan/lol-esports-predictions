@@ -16,3 +16,4 @@ __pycache__
 /lol-esports-data
 /games
 /games-parquet
+.env

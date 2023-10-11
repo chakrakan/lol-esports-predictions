@@ -1,14 +1,14 @@
 import asyncio
 import csv
-from typing import Optional
-import aiohttp
-import json
 import gzip
+import json
+import os
 import shutil
 import time
-import os
 from io import BytesIO
+from typing import Optional
 
+import aiohttp
 
 S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com"
 
@@ -19,11 +19,12 @@ async def download_gzip_and_write_to_json(session, remote_file_name: str, local_
         return
 
     async with session.get(f"{S3_BUCKET_URL}/{remote_file_name}.json.gz") as response:
+        print(response)
         if response.status == 200:
             try:
                 gzip_bytes = BytesIO(await response.read())
                 with gzip.GzipFile(fileobj=gzip_bytes, mode="rb") as gzipped_file:
-                    with open(f"{local_file_name}.json", 'wb') as output_file:
+                    with open(f"{local_file_name}.json", "wb") as output_file:
                         shutil.copyfileobj(gzipped_file, output_file)
                 print(f"{local_file_name}.json written")
             except Exception as e:
@@ -38,8 +39,20 @@ async def download_esports_files(session):
     if not os.path.exists(local_directory):
         os.makedirs(local_directory)
 
-    esports_data_files = ["leagues", "tournaments", "players", "teams", "mapping_data"]
-    tasks = [download_gzip_and_write_to_json(session, f"{local_directory}/{file_name}", f"{remote_directory}/{file_name}") for file_name in esports_data_files]
+    esports_data_files = [
+        "leagues",
+        "tournaments",
+        "players",
+        "teams",
+        "mapping_data",
+        "tournaments_without_game_data",
+        "unfiltered_players",
+        "unfiltered_teams",
+    ]
+    tasks = [
+        download_gzip_and_write_to_json(session, f"{remote_directory}/{file_name}", f"{local_directory}/{file_name}")
+        for file_name in esports_data_files
+    ]
     await asyncio.gather(*tasks)
 
 
@@ -54,9 +67,9 @@ async def download_games(session, year: int, num_games: Optional[int] = None):
     # filter by year, for 2023, len = 7855
     with open("esports-data/tournament-game-data.csv", "r") as csv_file:
         reader = csv.DictReader(csv_file)
-        completed_game_ids = [row['game_id'] for row in reader if row.get("startDate", "").startswith(str(year))]
+        completed_game_ids = [row["game_id"] for row in reader if row.get("startDate", "").startswith(str(year))]
 
-    print(len(completed_game_ids))
+    print(f"Completed Game IDs: {len(completed_game_ids)}")
     mappings = {}
 
     # use mapping-data with cleaned up rows where we don't have info
@@ -64,15 +77,17 @@ async def download_games(session, year: int, num_games: Optional[int] = None):
     with open("esports-data/filtered-mapping-data.csv", "r") as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
-            if row['esportsGameId'] in completed_game_ids:
-                mappings[row['esportsGameId']] = row['platformGameId']
-    
+            if row["esportsGameId"] in completed_game_ids:
+                mappings[row["esportsGameId"]] = row["platformGameId"]
+
     game_counter = 0
     total_games = len(mappings)
     tasks = []
-    
+
     for platform_id in mappings.values():
-        tasks.append(download_gzip_and_write_to_json(session, f"{directory}/{platform_id}", f"{directory}/{platform_id}"))
+        tasks.append(
+            download_gzip_and_write_to_json(session, f"{directory}/{platform_id}", f"{directory}/{platform_id}")
+        )
         game_counter += 1
 
         if game_counter % 10 == 0:
@@ -83,8 +98,10 @@ async def download_games(session, year: int, num_games: Optional[int] = None):
                 {round((time.time() - start_time)/60, 2)} minutes"
             )
         if game_counter == num_games:
-            print(f"----- Processed {game_counter} games, total run time: \
-            {round((time.time() - start_time)/60, 2)} minutes")
+            print(
+                f"----- Processed {game_counter} games, total run time: \
+            {round((time.time() - start_time)/60, 2)} minutes"
+            )
             print("----- Downloading completed")
             print("----- Exiting...")
             return
@@ -96,9 +113,8 @@ async def download_games(session, year: int, num_games: Optional[int] = None):
 async def main():
     connector = aiohttp.TCPConnector(limit=5)
     async with aiohttp.ClientSession(connector=connector) as session:
-        # await download_esports_files(session)
-        await download_games(session, 2023)
-    
+        await download_esports_files(session)
+        # await download_games(session, 2023)
 
 
 if __name__ == "__main__":
