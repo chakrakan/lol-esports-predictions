@@ -27,33 +27,33 @@ from constants import (
 )
 
 
-def get_game_data(file_name: str):
+def get_game_data(platform_game_id: str):
     """A modified version of the method provided by Riot/AWS for downloading game data.
     Reads from local if available, else downloads, writes to file, and returns json.
 
     Args:
         file_name (str): game file name
     """
-    if os.path.exists(f"{GAMES_DIR}/{file_name}.json"):
-        with open(f"{GAMES_DIR}/{file_name}.json", "r") as f:
+    if os.path.exists(f"{GAMES_DIR}/{platform_game_id}.json"):
+        with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
             json_data = json.load(f)
             return json_data
     else:
-        response = requests.get(f"{S3_BUCKET_URL}/{file_name}.json.gz")
+        response = requests.get(f"{S3_BUCKET_URL}/{platform_game_id}.json.gz")
         if response.status_code == 200:
             try:
                 gzip_bytes = BytesIO(response.content)
                 with gzip.GzipFile(fileobj=gzip_bytes, mode="rb") as gzipped_file:
-                    with open(f"{GAMES_DIR}/{file_name}.json", "wb") as output_file:
+                    with open(f"{GAMES_DIR}/{platform_game_id}.json", "wb") as output_file:
                         shutil.copyfileobj(gzipped_file, output_file)
-                    print(f"{file_name}.json written")
+                    print(f"{platform_game_id}.json written")
                     gzipped_content = gzipped_file.read().decode("utf-8")
                     json_data = json.loads(gzipped_content)
                     return json_data
             except Exception as e:
                 print("Error:", e)
         else:
-            print(f"Failed to download {file_name}")
+            print(f"Failed to download {platform_game_id}")
 
 
 def get_team_side_data(mapping_game_data: dict, tournament_game_data: dict, retrieved_game_data: dict):
@@ -124,7 +124,7 @@ def get_game_info_event_data(game_json_data):
     game_info_event_data["game_duration"] = game_end["gameTime"] / 1000  # ms -> seconds
     game_info_event_data["game_patch"] = game_start["gameVersion"]
     participant_data = get_game_info_participant_data(game_start["participants"])
-    epic_monsters_killed_data = get_first_epic_monster_kills(game_json_data)
+    epic_monsters_killed_data = get_epic_monster_kills(game_json_data)
     (
         game_info_event_data["team_first_turret_destroyed"],
         game_info_event_data["lane_first_turret_destroyed"],
@@ -178,6 +178,8 @@ def get_team_first_turret_destroyed(game_json_data) -> int:
     outer_turrets_destroyed.sort(key=lambda x: x["eventTime"])
     first_turret_destroyed = outer_turrets_destroyed[0]
     destroyed_turret_lane = LANE_MAPPING.get(str(first_turret_destroyed["lane"]), None)
+    # killerTeamID is usually NaN, and so is other info
+    # we get assist info usually, but teamID is always there
     turret_destroyed_team = int(first_turret_destroyed["teamID"])  # this is the team that had its
     # turret destroyed, NOT the team that destroyed it.
     # so get the opposing team instead.
@@ -196,7 +198,7 @@ def get_team_first_blood(game_json_data) -> int:
     return team_id
 
 
-def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, None]]:
+def get_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, None]]:
     """Get data related to who slayed the first dragon and baron.
     Some games may be missing dragon or baron data since they didn't need to take
     the objective, so we set None to maintain data integrity.
@@ -232,9 +234,9 @@ def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, No
         )
 
         for dragon_event in dragons_killed:
-            if dragon_event["killerTeamID"] == "100":
+            if int(dragon_event["killerTeamID"]) == 100:
                 num_dragons_secured_blue += 1
-            elif dragon_event["killerTeamID"] == "200":
+            elif int(dragon_event["killerTeamID"]) == 200:
                 num_dragons_secured_red += 1
 
         epic_monster_kills_data["num_dragons_secured_blue"] = num_dragons_secured_blue
@@ -246,9 +248,9 @@ def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, No
         epic_monster_kills_data["team_first_baron_kill"] = int(first_baron_event["killerTeamID"]) or None
 
         for baron_event in barons_killed:
-            if baron_event["killerTeamID"] == "100":
+            if int(baron_event["killerTeamID"]) == 100:
                 num_barons_secured_blue += 1
-            elif baron_event["killerTeamID"] == "200":
+            elif int(baron_event["killerTeamID"]) == 200:
                 num_barons_secured_red += 1
 
         epic_monster_kills_data["num_barons_secured_blue"] = num_barons_secured_blue
@@ -257,100 +259,92 @@ def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, No
     return epic_monster_kills_data
 
 
-def aggregate_game_data(league_id: Optional[str] = None):
+def aggregate_game_data(year: Optional[str] = None, tournament_id: Optional[str] = None):
     inconsistent_mapping_games = set()
     no_platform_id = set()
 
-    with open(f"{CREATED_DATA_DIR}/updated-leagues.csv") as csv_file:
-        reader = csv.DictReader(csv_file)
-        if league_id:
-            leagues_data = {row["League ID"]: row for row in reader if row["League ID"] == league_id}
-        else:
-            leagues_data = {row["League ID"]: row for row in reader}
-
     with open(f"{LOL_ESPORTS_DATA_DIR}/tournaments.json", "r") as json_file:
         tournaments_data = json.load(json_file)
+        if tournament_id:
+            tournaments_data = [tournament for tournament in tournaments_data if tournament["id"] == tournament_id]
+        if year:
+            tournaments_data = [
+                tournament for tournament in tournaments_data if tournament["startDate"].startswith(year)
+            ]
 
-    with open(f"{CREATED_DATA_DIR}/filtered_mapping_data.csv", "r") as csv_file:
-        reader = csv.DictReader(csv_file)
-        mappings = {esports_game["esportsGameId"]: esports_game for esports_game in reader}
+    with open(f"{LOL_ESPORTS_DATA_DIR}/mapping_data.json", "r") as json_file:
+        mappings_data = json.load(json_file)
+        mappings = {esports_game["esportsGameId"]: esports_game for esports_game in mappings_data}
 
-    for league in leagues_data.values():
-        if not os.path.exists(f"{CREATED_DATA_DIR}/leagues/{league['League Slug']}"):
-            os.makedirs(f"{CREATED_DATA_DIR}/leagues/{league['League Slug']}")
+    for tournament in tournaments_data:
+        tournament_slug = tournament.get("slug", "")
+        if os.path.isfile(f"{CREATED_DATA_DIR}/tournaments/{tournament_slug}.csv"):
+            continue
+        tournament_name = tournament.get("name", "")
+        start_date = tournament.get("startDate", "")
+        end_date = tournament.get("endDate", "")
+        print(f"Processing tournament: {tournament_name} — {tournament_slug}")
 
-        print(f"Processing league: {league['League Name']} — {league['League Slug']}")
-        league_tournament_ids = league["Tournaments"]
+        for stage in tournament.get("stages", []):
+            # there are 19 unique stage names
+            stage_name = stage["name"]
+            stage_slug = stage["slug"]
+            print(f"Processing {tournament['name']} stage: {stage_name} — {stage_slug}")
 
-        for tournament_id in league_tournament_ids:
-            for tournament in tournaments_data:
-                if tournament.get("id", "") == tournament_id:
-                    tournament_name = tournament.get("name", "")
-                    tournament_slug = tournament.get("slug", "")
-                    start_date = tournament.get("startDate", "")
-                    end_date = tournament.get("endDate", "")
-                    print(f"Processing tournament: {tournament_name} — {tournament_slug}")
+            for section in stage.get("sections", []):
+                # there are 20 unique section names
+                section_name = section["name"]
 
-                    for stage in tournament.get("stages", []):
-                        # there are 19 unique stage names
-                        stage_name = stage["name"]
-                        stage_slug = stage["slug"]
-                        print(f"Processing {tournament['name']} stage: {stage_name} — {stage_slug}")
+                for match in section.get("matches", []):
+                    # exclude "unstarted" matches
+                    if match.get("state") == "completed":
+                        # mode is always "classic"
+                        # there are matches with "unstarted" state and so are the games within it
+                        # there are 1327 unstarted matches overall
+                        for game in match.get("games", []):
+                            # some games are "unneeded"
+                            if game.get("state") == "completed":
+                                try:
+                                    game_id = game["id"]
+                                    game_data_from_mapping = mappings[game_id]
+                                    platform_game_id = game_data_from_mapping["platformGameId"]
+                                    game_number = int(game["number"])
+                                except KeyError:
+                                    print(f"No platform game id for game {game_id}")
+                                    no_platform_id.add(game_id)
+                                    continue
 
-                        for section in stage.get("sections", []):
-                            # there are 20 unique section names
-                            section_name = section["name"]
+                                retrieved_game_data = get_game_data(platform_game_id)
+                                is_consistent, team_blue, team_red, game_winner = get_team_side_data(
+                                    mapping_game_data=game_data_from_mapping,
+                                    tournament_game_data=game,
+                                    retrieved_game_data=retrieved_game_data,
+                                )
 
-                            for match in section.get("matches", []):
-                                # exclude "unstarted" matches
-                                if match.get("state") == "completed":
-                                    # mode is always "classic"
-                                    # there are matches with "unstarted" state and so are the games within it
-                                    # there are 1327 unstarted matches overall
-                                    for game in match.get("games", []):
-                                        # some games are "unneeded"
-                                        if game.get("state") == "completed":
-                                            try:
-                                                game_id = game["id"]
-                                                game_data_from_mapping = mappings[game_id]
-                                                platform_game_id = game_data_from_mapping["platformGameId"]
-                                                game_number = int(game["number"])
-                                            except KeyError:
-                                                print(f"No platform game id for game {game_id}")
-                                                no_platform_id.add(game_id)
-                                                continue
+                                if not is_consistent:
+                                    inconsistent_mapping_games.add(game_id)
+                                    continue
 
-                                            retrieved_game_data = get_game_data(platform_game_id)
-                                            is_consistent, team_blue, team_red, game_winner = get_team_side_data(
-                                                mapping_game_data=game_data_from_mapping,
-                                                tournament_game_data=game,
-                                                retrieved_game_data=retrieved_game_data,
-                                            )
+                                tournament_game_info = {
+                                    "tournament_id": tournament_id,
+                                    "tournament_slug": tournament_slug,
+                                    "tournament_start_date": start_date,
+                                    "tournament_end_date": end_date,
+                                    "platform_game_id": platform_game_id,
+                                    "game_id": game_id,
+                                    "game_number": game_number,
+                                    "stage_name": stage_name,
+                                    "stage_slug": stage_slug,
+                                    "section_name": section_name,
+                                    "team_blue": team_blue,
+                                    "team_red": team_red,
+                                    "game_winner": game_winner,
+                                }
 
-                                            if not is_consistent:
-                                                inconsistent_mapping_games.add(game_id)
-                                                continue
-
-                                            tournament_game_info = {
-                                                "tournament_id": tournament_id,
-                                                "tournament_name": tournament_name,
-                                                "tournament_start_date": start_date,
-                                                "tournament_end_date": end_date,
-                                                "platform_game_id": platform_game_id,
-                                                "game_id": game_id,
-                                                "game_number": game_number,
-                                                "stage_name": stage_name,
-                                                "stage_slug": stage_slug,
-                                                "section_name": section_name,
-                                                "team_blue": team_blue,
-                                                "team_red": team_red,
-                                                "game_winner": game_winner,
-                                            }
-
-                                            game_info_event_data = get_game_info_event_data(retrieved_game_data)
+                                game_info_event_data = get_game_info_event_data(retrieved_game_data)
 
 
 if __name__ == "__main__":
-    # game https://www.youtube.com/watch?v=kAVm8zg-ZSU
+    # game https://www.youtube.com/watch?v=gapSIdUT8Us
     game_data = get_game_data("ESPORTS3294091")
     # aggregate_game_data("109511549831443335")  # LCS Challengers - only 2 tournaments, good to test

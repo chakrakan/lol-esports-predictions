@@ -3,7 +3,7 @@ from enum import Enum
 ####### Directory consts
 CREATED_DATA_DIR = "esports-data/created"
 LOL_ESPORTS_DATA_DIR = "esports-data/lol-esports-data"
-GAMES_DIR = "games"
+GAMES_DIR = "league-games"
 
 ####### util consts
 S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com"
