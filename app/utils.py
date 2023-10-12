@@ -12,8 +12,10 @@ from constants import (
     BUILDING_DESTROYED,
     CHAMPION_KILL,
     CREATED_DATA_DIR,
+    DRAGON_TYPE_MAPPINGS,
     EPIC_MONSTER_KILL,
     GAMES_DIR,
+    LANE_MAPPING,
     LOL_ESPORTS_DATA_DIR,
     ROLES,
     S3_BUCKET_URL,
@@ -99,7 +101,7 @@ def get_team_side_data(mapping_game_data: dict, tournament_game_data: dict, retr
     return is_consistent, team_blue_id, team_red_id, game_winner
 
 
-def get_game_winner(game_end_winner, winning_side_from_tournament):
+def get_game_winner(game_end_winner, winning_side_from_tournament) -> int:
     if game_end_winner and game_end_winner == winning_side_from_tournament:
         game_winner = int(game_end_winner)
     else:
@@ -123,7 +125,10 @@ def get_game_info_event_data(game_json_data):
     game_info_event_data["game_patch"] = game_start["gameVersion"]
     participant_data = get_game_info_participant_data(game_start["participants"])
     epic_monsters_killed_data = get_first_epic_monster_kills(game_json_data)
-    game_info_event_data["team_first_turret_destroyed"] = get_team_first_turret_destroyed(game_json_data)
+    (
+        game_info_event_data["team_first_turret_destroyed"],
+        game_info_event_data["lane_first_turret_destroyed"],
+    ) = get_team_first_turret_destroyed(game_json_data)
     game_info_event_data["team_first_blood"] = get_team_first_blood(game_json_data)
     return dict(game_info_event_data, **participant_data, **epic_monsters_killed_data)
 
@@ -131,12 +136,28 @@ def get_game_info_event_data(game_json_data):
 def get_game_info_participant_data(participants_data):
     """Get game participant info from the nested participants column
     within the `game_info` event.
+
+    The data is consistently setup as the following:
+        T1 Zeus 100 Gwen 1
+        T1 Oner 100 Viego 2
+        T1 Faker 100 Viktor 3
+        T1 Gumayusi 100 Varus 4
+        T1 Keria 100 Karma 5
+        DRX Kingen 200 Aatrox 6
+        DRX Pyosik 200 Hecarim 7
+        DRX Zeka 200 Azir 8
+        DRX Deft 200 Caitlyn 9
+        DRX BeryL 200 Bard 10
+
+    Thus, players 1-5 will always belong on the same team, and 6-10 on the other.
     """
     participant_data = {}
     for player, role in zip(participants_data, ROLES):
+        # 1_100_top = T1 Zeus, 2_100_jng = T1 Oner etc.
         base_key = f"{player['participantID']}_{player['teamID']}_{role}"
         participant_data[base_key] = player["summonerName"]
         participant_data[f"{base_key}_champion"] = player["championName"]
+    return participant_data
 
 
 def get_status_update_event_data(game_json_data):
@@ -156,8 +177,12 @@ def get_team_first_turret_destroyed(game_json_data) -> int:
     ]
     outer_turrets_destroyed.sort(key=lambda x: x["eventTime"])
     first_turret_destroyed = outer_turrets_destroyed[0]
-    team_id = int(first_turret_destroyed["teamID"])
-    return team_id
+    destroyed_turret_lane = LANE_MAPPING.get(str(first_turret_destroyed["lane"]), None)
+    turret_destroyed_team = int(first_turret_destroyed["teamID"])  # this is the team that had its
+    # turret destroyed, NOT the team that destroyed it.
+    # so get the opposing team instead.
+    team_first_turret_destroyed = 200 if turret_destroyed_team == 100 else 100
+    return team_first_turret_destroyed, destroyed_turret_lane
 
 
 def get_team_first_blood(game_json_data) -> int:
@@ -177,6 +202,11 @@ def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, No
     the objective, so we set None to maintain data integrity.
     """
     epic_monster_kills_data = {}
+    num_dragons_secured_red = 0
+    num_dragons_secured_blue = 0
+    num_barons_secured_blue = 0
+    num_barons_secured_red = 0
+
     dragons_killed = [
         event
         for event in game_json_data
@@ -187,20 +217,42 @@ def get_first_epic_monster_kills(game_json_data) -> Dict[str, Union[int, str, No
         for event in game_json_data
         if event["eventType"] == EPIC_MONSTER_KILL and event["monsterType"] == Monsters.BARON.value
     ]
+    heralds_killed = [
+        event
+        for event in game_json_data
+        if event["eventType"] == EPIC_MONSTER_KILL and event["monsterType"] == Monsters.HERALD.value
+    ]
+
     if dragons_killed:
         dragons_killed.sort(key=lambda x: x["eventTime"])
         first_dragon_event = dragons_killed[0]
-        epic_monster_kills_data["team_first_dragon_kill"] = int(first_dragon_event["killerTeamID"])
-        epic_monster_kills_data["first_dragon_type"] = str(first_dragon_event["dragonType"])
-    else:
-        epic_monster_kills_data["team_first_dragon_kill"] = None
-        epic_monster_kills_data["first_dragon_type"] = None
+        epic_monster_kills_data["team_first_dragon_kill"] = int(first_dragon_event["killerTeamID"]) or None
+        epic_monster_kills_data["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get(
+            str(first_dragon_event["dragonType"]), None
+        )
+
+        for dragon_event in dragons_killed:
+            if dragon_event["killerTeamID"] == "100":
+                num_dragons_secured_blue += 1
+            elif dragon_event["killerTeamID"] == "200":
+                num_dragons_secured_red += 1
+
+        epic_monster_kills_data["num_dragons_secured_blue"] = num_dragons_secured_blue
+        epic_monster_kills_data["num_dragons_secured_red"] = num_dragons_secured_red
+
     if barons_killed:
         barons_killed.sort(key=lambda x: x["eventTime"])
         first_baron_event = barons_killed[0]
-        epic_monster_kills_data["team_first_baron_kill"] = int(first_baron_event["killerTeamID"])
-    else:
-        epic_monster_kills_data["team_first_baron_kill"] = None
+        epic_monster_kills_data["team_first_baron_kill"] = int(first_baron_event["killerTeamID"]) or None
+
+        for baron_event in barons_killed:
+            if baron_event["killerTeamID"] == "100":
+                num_barons_secured_blue += 1
+            elif baron_event["killerTeamID"] == "200":
+                num_barons_secured_red += 1
+
+        epic_monster_kills_data["num_barons_secured_blue"] = num_barons_secured_blue
+        epic_monster_kills_data["num_barons_secured_red"] = num_barons_secured_red
 
     return epic_monster_kills_data
 
@@ -262,7 +314,7 @@ def aggregate_game_data(league_id: Optional[str] = None):
                                                 game_id = game["id"]
                                                 game_data_from_mapping = mappings[game_id]
                                                 platform_game_id = game_data_from_mapping["platformGameId"]
-                                                game_number = game["number"]
+                                                game_number = int(game["number"])
                                             except KeyError:
                                                 print(f"No platform game id for game {game_id}")
                                                 no_platform_id.add(game_id)

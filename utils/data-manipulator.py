@@ -71,7 +71,7 @@ async def convert_csv_to_parquet(csv_file, parquet_file):
 
 
 def main():
-    gzip_to_json("games/ESPORTSTMNT01 3294091.json.gz", "games/ESPORTS3294091.json")
+    gzip_to_json("games/ESPORTSTMNT02 3080905.json.gz", "games/ESPORTSTMNT02:3080905.json")
     # Get list of JSON files
     # json_files = [f for f in os.listdir(GAMES_DIR) if f.endswith('.json')]
 
