@@ -141,13 +141,13 @@ def get_team_side_data(mapping_game_data: dict, tournament_game_data: dict, retr
     """Detecting game winning side could be finnicky. We have been told that the tournaments file
     should NOT be used to:
     - detect red/blue side teams -> use mapping_data instead
-    - get participant info
+    - detect winners -> use get participant info event from game if possible
 
     So we are going to do a sanity check for the tournament data with the mapping data AND the actual
     game data that provides us the info using the `winningTeam` column.
 
     NOTE: winning team can also be missing from games, in which case, we will need to fall back
-    to the tournament data for source of truth.
+    to the tournament data for source of truth since we don't have game win info anywhere else.
 
     Args:
         mapping_game_data (dict)
@@ -251,6 +251,12 @@ def get_status_update_event_data(game_json_data):
 def get_team_first_turret_destroyed(game_json_data) -> int:
     """Outer turrets are first to go, so we want to use that info to get
     the team that had the first turret destroyed.
+
+    LANE_MAPPING = {
+        "top": 1,
+        "mid": 2,
+        "bot": 3,
+    }
     """
     outer_turrets_destroyed = [
         event
@@ -428,9 +434,12 @@ def aggregate_game_data(year: Optional[str] = None):
                                 }
 
                                 game_info_event_data = get_game_info_event_data(retrieved_game_data)
+                                # TODO: get game status update event data for player data and
+                                # add to all_game_info_data
                                 all_game_info_data = dict(base_game_info, **game_info_event_data)
                                 game_df = pd.DataFrame(all_game_info_data)
                                 tournament_games_df_list.append(game_df)
+
         tournament_df = pd.concat(tournament_games_df_list, ignore_index=True)
         tournament_df.to_csv(f"{CREATED_DATA_DIR}/tournaments/{tournament_slug}.csv", index=False)
 
