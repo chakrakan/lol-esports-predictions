@@ -4,6 +4,8 @@ from enum import Enum
 CREATED_DATA_DIR = "esports-data/created"
 LOL_ESPORTS_DATA_DIR = "esports-data/lol-esports-data"
 GAMES_DIR = "league-games"
+TOURNAMENT_TO_SLUGS_MAPPING_PATH = f"{CREATED_DATA_DIR}/tournament_to_stage_slugs_mapping.json"
+TEAM_ID_TO_INFO_MAPPING_PATH = f"{CREATED_DATA_DIR}/team_id_to_info_mapping.json"
 
 ####### util consts
 S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com"
