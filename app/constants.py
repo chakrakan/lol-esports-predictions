@@ -3,12 +3,12 @@ from enum import Enum
 ####### Directory consts
 CREATED_DATA_DIR = "esports-data/created"
 LOL_ESPORTS_DATA_DIR = "esports-data/lol-esports-data"
-GAMES_DIR = "league-games"
+GAMES_DIR = "games"
 TOURNAMENT_TO_SLUGS_MAPPING_PATH = f"{CREATED_DATA_DIR}/tournament_to_stage_slugs_mapping.json"
 TEAM_ID_TO_INFO_MAPPING_PATH = f"{CREATED_DATA_DIR}/team_id_to_info_mapping.json"
 
 ####### util consts
-S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com"
+S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com/games"
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 # method consts
@@ -20,6 +20,7 @@ ROLES = ["top", "jng", "mid", "adc", "sup", "top", "jng", "mid", "adc", "sup"]
 BUILDING_DESTROYED = "building_destroyed"
 CHAMPION_KILL = "champion_kill"
 EPIC_MONSTER_KILL = "epic_monster_kill"
+STATS_UPDATE = "stats_update"
 
 # Kill stats
 FIRST_BLOOD = "firstBlood"
@@ -69,8 +70,41 @@ CHAMPIONS_KILLED = "CHAMPIONS_KILLED"
 NUM_DEATHS = "NUM_DEATHS"
 ASSISTS = "ASSISTS"
 
-# player general stats
-TOTAL_GOLD = "totalGold"
+# main level player stats
+PARTICIPANT_BASE_INFO = ["summonerName", "championName"]
+PARTICIPANT_GENERAL_STATS = ["level", "totalGold"]
+
+### nested player stats
+# assist gold tells us best supporting player (not exclusive to support role)
+# killChampion tells us best duelist
+# shutdownReward tells us about players that focus and get shutdowns to gain advantage
+# killMinion tells us about best farmer
+# killStructure tells us about players/champions that break focus and take structures
+PARTICIPANT_GOLD_STATS = ["assist", "killChampion", "shutdownReward", "killMinion", "killStructure"]
+PARTICIPANT_GAME_STATS = [
+    "MINIONS_KILLED",
+    "CHAMPIONS_KILLED",
+    "NUM_DEATHS",
+    "ASSISTS",
+    "WARD_PLACED",
+    "WARD_KILLED",
+    "VISION_SCORE",
+    "TOTAL_DAMAGE_DEALT",
+    "TOTAL_DAMAGE_DEALT_TO_BUILDINGS",
+    "TOTAL_TIME_CROWD_CONTROL_DEALT_TO_CHAMPIONS",
+]
+
+#### Team stats
+TEAM_STATS = [
+    "championsKills",
+    "deaths",
+    "assists",
+    "totalGold",
+    "inhibKills",
+    "dragonKills",
+    "baronKills",
+    "towerKills",
+]
 
 
 # mins -> seconds
@@ -91,5 +125,7 @@ class ExperienceTimers(Enum):
     # Mid Game
     FIFTEEN_MINS = 900
     TWENTY_MINS = 1200  # rough first baron taken
-    # End Game
+    # Late Game
+    TWENTY_FIVE_MINS = 1500
+    THIRTY_MINS = 1800
     THIRTY_FIVE_MINS = 2100  # elder dragon spawn -> whichever team gets, rolls the other one
