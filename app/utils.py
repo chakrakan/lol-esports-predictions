@@ -213,7 +213,7 @@ def get_game_event_data(game_json_data):
     game_info_event_data = {}
 
     game_info_event_data["game_date"] = get_game_date(game_start["eventTime"])
-    game_info_event_data["game_duration"] = game_end["gameTime"] / 1000  # ms -> seconds
+    game_info_event_data["game_duration"] = game_end["gameTime"] // 1000  # ms -> seconds
     game_info_event_data["game_patch"] = game_start["gameVersion"]
 
     participant_data = get_game_participant_data(game_start["participants"], get_base_info=True)
@@ -242,23 +242,14 @@ def get_game_event_data(game_json_data):
     # They are always in order of participantID 1-5, 5-10, then repeats
     # team data is always in order of 100, then 200.
 
-    #### Early game stats
-    early_game_team_stats = get_early_game_status_update_event_data(stats_update_events=stats_update_events)
-
-    #### Mid game stats
-    mid_game_team_stats = get_mid_game_status_update_event_data(stats_update_events=stats_update_events)
-
-    #### Late/End game stats
-    # game_end doesn't really have data most of the times except winningTeam
-    late_game_team_stats = get_late_game_status_update_event_data(stats_update_events=stats_update_events)
+    #### Game stats
+    game_status_update_data = get_game_status_update_event_data(stats_update_events=stats_update_events)
 
     return dict(
         game_info_event_data,
         **participant_data,
         **epic_monsters_killed_data,
-        **early_game_team_stats,
-        **mid_game_team_stats,
-        **late_game_team_stats,
+        **game_status_update_data,
     )
 
 
@@ -291,7 +282,6 @@ def get_game_participant_data(
         # 1_100_top = T1 Zeus, 6_200_top = DRX Kingen etc.
         base_key = f"{player_info['participantID']}_{player_info['teamID']}_{role}"
         gold_stats = player_info.get("goldStats", {})
-        player_stats = player_info.get("stats", {})
 
         if get_base_info and all(key in player_info for key in PARTICIPANT_BASE_INFO):
             for base_info in PARTICIPANT_BASE_INFO:
@@ -303,11 +293,20 @@ def get_game_participant_data(
 
         if get_stats_info and all(key in gold_stats for key in PARTICIPANT_GOLD_STATS):
             for gold_stat in PARTICIPANT_GOLD_STATS:
-                game_participant_data[f"{base_key}_{gold_stat}_{time_stamp}"] = gold_stats.get(gold_stat, None)
+                value = float(gold_stats.get(gold_stat, 0))
+                game_participant_data[f"{base_key}_{gold_stat}_{time_stamp}"] = value
+                game_participant_data[f"{player_info['teamID']}_total_{gold_stat}_{time_stamp}"] = (
+                    game_participant_data.get(f"{player_info['teamID']}_total_{gold_stat}_{time_stamp}", 0.0) + value
+                )
 
-        if get_stats_info and all(key in player_stats for key in PARTICIPANT_GAME_STATS):
+        if get_stats_info:
+            player_stats = {stat["name"]: stat["value"] for stat in player_info.get("stats", [])}
             for game_stat in PARTICIPANT_GAME_STATS:
-                game_participant_data[f"{base_key}_{game_stat}_{time_stamp}"] = player_stats.get(game_stat, None)
+                value = float(player_stats.get(game_stat, 0))
+                game_participant_data[f"{base_key}_{game_stat}_{time_stamp}"] = value
+                game_participant_data[f"{player_info['teamID']}_total_{game_stat}_{time_stamp}"] = (
+                    game_participant_data.get(f"{player_info['teamID']}_total_{game_stat}_{time_stamp}", 0.0) + value
+                )
 
     return game_participant_data
 
@@ -327,7 +326,7 @@ def get_game_team_data(teams_data: List[Dict[str, Any]], time_stamp: str) -> Dic
 
         if all(key in team_info for key in TEAM_STATS):
             for team_stat in TEAM_STATS:
-                game_team_data[f"{team_id}_{team_stat}_{time_stamp}"] = team_info.get(team_stat, None)
+                game_team_data[f"{team_id}_{team_stat}_{time_stamp}"] = int(team_info.get(team_stat, 0))
 
     return game_team_data
 
@@ -370,7 +369,7 @@ def get_filtered_events_from_game_data(game_json_data):
     )
 
 
-def find_nearest_event(stats_update_events: List[Dict[str, Any]], target_time: str) -> Dict[str, Any]:
+def find_nearest_event(stats_update_events: List[Dict[str, Any]], target_time: int) -> Dict[str, Any]:
     """Find the nearest event to the given time stamp.
     This is used to get the participant and team stats for a game.
     """
@@ -399,73 +398,21 @@ def find_nearest_event(stats_update_events: List[Dict[str, Any]], target_time: s
         )
 
 
-def get_early_game_status_update_event_data(stats_update_events: List[Dict[str, Any]]):
-    """Get early game stats update event data"""
-    early_game_data = {}
-
-    EARLY_GAME_TIMES = [ExperienceTimers.FIVE_MINS.value, ExperienceTimers.TEN_MINS.value]
-
-    for time_stamp in EARLY_GAME_TIMES:
-        event = find_nearest_event(stats_update_events=stats_update_events, target_time=time_stamp)
-        participants_data = event["participants"]
-        teams_data = event["teams"]
-
-        participant_stats_data = get_game_participant_data(
-            participants_data=participants_data, get_stats_info=True, time_stamp=str(time_stamp)
-        )
-        team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp=str(time_stamp))
-        early_game_data.update(participant_stats_data)
-        early_game_data.update(team_stats_data)
-
-    return early_game_data
-
-
-def get_mid_game_status_update_event_data(stats_update_events: List[Dict[str, Any]]):
-    """Get mid game status update event data"""
-    mid_game_data = {}
-
-    # last stat update
-    end_game_stats = stats_update_events[-1]
-    end_game_time = int(end_game_stats["gameTime"]) // 1000
-    MID_GAME_TIMES = [
-        time.value
-        for time in (ExperienceTimers.FIFTEEN_MINS, ExperienceTimers.TWENTY_MINS)
-        if end_game_time > time.value + 300
-    ]
-
-    for time_stamp in MID_GAME_TIMES:
-        event = find_nearest_event(stats_update_events=stats_update_events, target_time=time_stamp)
-        participants_data = event["participants"]
-        teams_data = event["teams"]
-
-        participant_stats_data = get_game_participant_data(
-            participants_data=participants_data, get_stats_info=True, time_stamp=str(time_stamp)
-        )
-        team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp=str(time_stamp))
-        mid_game_data.update(participant_stats_data)
-        mid_game_data.update(team_stats_data)
-
-    return mid_game_data
-
-
-def get_late_game_status_update_event_data(stats_update_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+def get_game_status_update_event_data(stats_update_events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Get the late game and end game stats from the stats update events.
     This is the last event in the stats update events list.
     """
-    late_game_info = {}
-    # last stat update
-    end_game_stats = stats_update_events[-1]
-    end_game_time = int(end_game_stats["gameTime"]) // 1000
+    game_status_data = {}
 
     # only include timers if they are at least 5 mins off the actual game_end time
     # otherwise just use game_end time since the data won't be drastically different
-    LATE_GAME_TIMES = [
-        time.value
-        for time in (ExperienceTimers.TWENTY_FIVE_MINS, ExperienceTimers.THIRTY_MINS, ExperienceTimers.THIRTY_FIVE_MINS)
-        if end_game_time > time.value + 300
+    GAME_TIMES = [
+        # ExperienceTimers.FIVE_MINS.value,
+        # ExperienceTimers.TEN_MINS.value,
+        ExperienceTimers.FIFTEEN_MINS.value,
     ]
 
-    for time_stamp in LATE_GAME_TIMES:
+    for time_stamp in GAME_TIMES:
         event = find_nearest_event(stats_update_events=stats_update_events, target_time=time_stamp)
         participants_data = event["participants"]
         teams_data = event["teams"]
@@ -474,9 +421,11 @@ def get_late_game_status_update_event_data(stats_update_events: List[Dict[str, A
             participants_data=participants_data, get_stats_info=True, time_stamp=str(time_stamp)
         )
         team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp=str(time_stamp))
-        late_game_info.update(participant_stats_data)
-        late_game_info.update(team_stats_data)
+        game_status_data.update(participant_stats_data)
+        game_status_data.update(team_stats_data)
 
+    # last stat update
+    end_game_stats = stats_update_events[-1]
     participants_data = end_game_stats["participants"]
     teams_data = end_game_stats["teams"]
 
@@ -487,7 +436,7 @@ def get_late_game_status_update_event_data(stats_update_events: List[Dict[str, A
     # team stats collection
     team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp="end")
     end_game_info = dict(participant_stats_data, **team_stats_data)
-    return dict(late_game_info, **end_game_info)
+    return dict(game_status_data, **end_game_info)
 
 
 def get_team_first_turret_destroyed(turret_destroyed_events) -> int:

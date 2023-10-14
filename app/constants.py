@@ -83,15 +83,18 @@ PARTICIPANT_GENERAL_STATS = ["level", "totalGold"]
 PARTICIPANT_GOLD_STATS = ["assist", "killChampion", "shutdownReward", "killMinion", "killStructure"]
 PARTICIPANT_GAME_STATS = [
     "MINIONS_KILLED",
+    "NEURTRAL_MINIONS_KILLED",
+    "NEUTRAL_MINIONS_KILLED_ENEMY_JUNGLE",
     "CHAMPIONS_KILLED",
     "NUM_DEATHS",
     "ASSISTS",
     "WARD_PLACED",
     "WARD_KILLED",
     "VISION_SCORE",
-    "TOTAL_DAMAGE_DEALT",
+    "TOTAL_DAMAGE_DEALT_TO_CHAMPIONS",
     "TOTAL_DAMAGE_DEALT_TO_BUILDINGS",
     "TOTAL_TIME_CROWD_CONTROL_DEALT_TO_CHAMPIONS",
+    "TIME_CCING_OTHERS",
 ]
 
 #### Team stats
@@ -119,13 +122,6 @@ TEAM_STATS = [
 # since it takes 23 seconds to clear herald (longer if no help), and then walk into lane + herald animations
 # Honey fruit spawns -> 6 mins
 class ExperienceTimers(Enum):
-    # Early Game
     FIVE_MINS = 300  # rough FB time + first dragon spawn + blast cones spawn (gank paths)
     TEN_MINS = 600  # rough herald contest time + first dragon has been taken + unleashed teleport
-    # Mid Game
-    FIFTEEN_MINS = 900
-    TWENTY_MINS = 1200  # rough first baron taken
-    # Late Game
-    TWENTY_FIVE_MINS = 1500
-    THIRTY_MINS = 1800
-    THIRTY_FIVE_MINS = 2100  # elder dragon spawn -> whichever team gets, rolls the other one
+    FIFTEEN_MINS = 900  # mid game
