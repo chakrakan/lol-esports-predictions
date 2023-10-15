@@ -100,6 +100,13 @@ def get_team_id_to_info_mapping():
         return team_mapping
 
 
+def get_team_side_by_value(value: int) -> str:
+    for key, val in STR_SIDE_MAPPING.items():
+        if val == value:
+            return key
+    return None
+
+
 def get_game_data(platform_game_id: str):
     """A modified version of the method provided by Riot/AWS for downloading game data.
     Reads from local if available, else downloads, writes to file, and returns json.
@@ -281,26 +288,27 @@ def get_game_participant_data(
     for player_info, role in zip(participants_data, ROLES):
         # 1_100_top = T1 Zeus, 6_200_top = DRX Kingen etc.
         base_key = f"{player_info['participantID']}_{player_info['teamID']}_{role}"
-        gold_stats = player_info.get("goldStats", {})
 
         if get_base_info and all(key in player_info for key in PARTICIPANT_BASE_INFO):
             for base_info in PARTICIPANT_BASE_INFO:
-                game_participant_data[f"{base_key}_{base_info}"] = player_info.get(base_info, None)
+                game_participant_data[f"{base_key}_{base_info}"] = player_info[base_info]
 
-        if get_stats_info and all(key in player_info for key in PARTICIPANT_GENERAL_STATS):
+        if get_stats_info:
             for general_stat in PARTICIPANT_GENERAL_STATS:
-                game_participant_data[f"{base_key}_{general_stat}_{time_stamp}"] = player_info.get(general_stat, None)
+                game_participant_data[f"{base_key}_{general_stat}_{time_stamp}"] = player_info[general_stat]
 
-        if get_stats_info and all(key in gold_stats for key in PARTICIPANT_GOLD_STATS):
+        if get_stats_info:
+            gold_stats = player_info["goldStats"]
             for gold_stat in PARTICIPANT_GOLD_STATS:
                 value = float(gold_stats.get(gold_stat, 0))
-                game_participant_data[f"{base_key}_{gold_stat}_{time_stamp}"] = value
-                game_participant_data[f"{player_info['teamID']}_total_{gold_stat}_{time_stamp}"] = (
-                    game_participant_data.get(f"{player_info['teamID']}_total_{gold_stat}_{time_stamp}", 0.0) + value
+                game_participant_data[f"{base_key}_goldStat_{gold_stat}_{time_stamp}"] = value
+                game_participant_data[f"{player_info['teamID']}_total_goldStat_{gold_stat}_{time_stamp}"] = (
+                    game_participant_data.get(f"{player_info['teamID']}_total_goldStat_{gold_stat}_{time_stamp}", 0.0)
+                    + value
                 )
 
         if get_stats_info:
-            player_stats = {stat["name"]: stat["value"] for stat in player_info.get("stats", [])}
+            player_stats = {stat["name"]: stat["value"] for stat in player_info["stats"]}
             for game_stat in PARTICIPANT_GAME_STATS:
                 value = float(player_stats.get(game_stat, 0))
                 game_participant_data[f"{base_key}_{game_stat}_{time_stamp}"] = value
@@ -323,10 +331,10 @@ def get_game_team_data(teams_data: List[Dict[str, Any]], time_stamp: str) -> Dic
 
     for team_info in teams_data:
         team_id = int(team_info["teamID"])
+        side = get_team_side_by_value(team_id)
 
-        if all(key in team_info for key in TEAM_STATS):
-            for team_stat in TEAM_STATS:
-                game_team_data[f"{team_id}_{team_stat}_{time_stamp}"] = int(team_info.get(team_stat, 0))
+        for team_stat in TEAM_STATS:
+            game_team_data[f"{team_id}_{side}_{team_stat}_{time_stamp}"] = int(team_info[team_stat])
 
     return game_team_data
 
@@ -392,8 +400,8 @@ def find_nearest_event(stats_update_events: List[Dict[str, Any]], target_time: i
     else:
         return (
             stats_update_events[left]
-            if abs(stats_update_events[left]["gameTime"] - target_time)
-            < abs(stats_update_events[right]["gameTime"] - target_time)
+            if abs((int(stats_update_events[left]["gameTime"]) // 1000) - target_time)
+            < abs((int(stats_update_events[right]["gameTime"]) // 1000) - target_time)
             else stats_update_events[right]
         )
 
@@ -431,10 +439,10 @@ def get_game_status_update_event_data(stats_update_events: List[Dict[str, Any]])
 
     # participant stats collection
     participant_stats_data = get_game_participant_data(
-        participants_data=participants_data, get_stats_info=True, time_stamp="end"
+        participants_data=participants_data, get_stats_info=True, time_stamp="game_end"
     )
     # team stats collection
-    team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp="end")
+    team_stats_data = get_game_team_data(teams_data=teams_data, time_stamp="game_end")
     end_game_info = dict(participant_stats_data, **team_stats_data)
     return dict(game_status_data, **end_game_info)
 
@@ -453,7 +461,7 @@ def get_team_first_turret_destroyed(turret_destroyed_events) -> int:
         turret_event for turret_event in turret_destroyed_events if turret_event["turretTier"] == Turret.OUTER.value
     ]
     first_turret_destroyed = outer_turrets_destroyed[0]
-    destroyed_turret_lane = LANE_MAPPING.get(str(first_turret_destroyed["lane"]), None)
+    destroyed_turret_lane = LANE_MAPPING.get(str(first_turret_destroyed["lane"]))
     # killerTeamID is usually NaN, and so is other info
     # we get assist info usually, but teamID is always there
     turret_destroyed_team = int(first_turret_destroyed["teamID"])  # this is the team that had its
@@ -473,38 +481,42 @@ def get_team_first_blood(champion_kill_events) -> int:
 
 
 def get_dragon_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], dragon_kill_events) -> None:
-    """Get dragon kill data from the epic monster kill data."""
+    """Get dragon kill data from the epic monster kill data. 0 placeholder for no first dragon"""
     if dragon_kill_events:
         first_dragon_event = dragon_kill_events[0]
-        monster_kills_dict["team_first_dragon_kill"] = int(first_dragon_event["killerTeamID"]) or None
-        monster_kills_dict["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get(str(first_dragon_event["dragonType"]), None)
+        monster_kills_dict["team_first_dragon_kill"] = int(first_dragon_event["killerTeamID"])
+        monster_kills_dict["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get(str(first_dragon_event["dragonType"]))
+    else:
+        monster_kills_dict["team_first_dragon_kill"] = 0
+        monster_kills_dict["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get("unknown")
 
 
 def get_baron_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], baron_kill_events) -> None:
-    """Get baron kill data from the epic monster kill data."""
+    """Get baron kill data from the epic monster kill data. 0 placeholder for no first baron"""
     if baron_kill_events:
         first_baron_event = baron_kill_events[0]
-        monster_kills_dict["team_first_baron_kill"] = int(first_baron_event["killerTeamID"]) or None
+        monster_kills_dict["team_first_baron_kill"] = int(first_baron_event["killerTeamID"])
+    else:
+        monster_kills_dict["team_first_baron_kill"] = 0
 
 
 def get_herald_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], herald_kill_events) -> None:
-    """Get herald kill data from the epic monster kill data."""
+    """Get herald kill data from the epic monster kill data. 0 place holder for no first herald"""
     num_heralds_secured_blue = 0
     num_heralds_secured_red = 0
 
-    if herald_kill_events:
-        first_herald_event = herald_kill_events[0]
-        monster_kills_dict["team_first_herald_kill"] = int(first_herald_event["killerTeamID"]) or None
+    first_herald_event = herald_kill_events[0]
+    monster_kills_dict["team_first_herald_kill"] = int(first_herald_event["killerTeamID"]) or 0
 
-        # herald data is not available in stats_update teams data
-        for herald_event in herald_kill_events:
-            if int(herald_event["killerTeamID"]) == 100:
-                num_heralds_secured_blue += 1
-            elif int(herald_event["killerTeamID"]) == 200:
-                num_heralds_secured_red += 1
+    # herald data is not available in stats_update teams data
+    for herald_event in herald_kill_events:
+        if int(herald_event["killerTeamID"]) == 100:
+            num_heralds_secured_blue += 1
+        elif int(herald_event["killerTeamID"]) == 200:
+            num_heralds_secured_red += 1
 
-        monster_kills_dict["num_heralds_secured_blue"] = num_heralds_secured_blue
-        monster_kills_dict["num_heralds_secured_red"] = num_heralds_secured_red
+    monster_kills_dict["num_heralds_secured_blue"] = num_heralds_secured_blue
+    monster_kills_dict["num_heralds_secured_red"] = num_heralds_secured_red
 
 
 def get_epic_monster_kills(
@@ -623,6 +635,7 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         if not os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}"):
             os.makedirs(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}")
         tournament_df = pd.concat(tournament_games_df_list, ignore_index=True)
+        tournament_df.sort_values(by=["game_date"])
         tournament_df.to_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv", index=False)
 
 

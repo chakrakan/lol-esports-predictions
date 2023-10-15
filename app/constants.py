@@ -31,6 +31,7 @@ INHIBITOR = "inhibitor"
 NEXUS = "nexus"
 
 DRAGON_TYPE_MAPPINGS = {
+    "unknown": 0,
     "fire": 1,  # infernal
     "water": 2,  # ocean
     "earth": 3,  # mountain
