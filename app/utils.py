@@ -415,8 +415,8 @@ def get_game_status_update_event_data(stats_update_events: List[Dict[str, Any]])
     # only include timers if they are at least 5 mins off the actual game_end time
     # otherwise just use game_end time since the data won't be drastically different
     GAME_TIMES = [
-        # ExperienceTimers.FIVE_MINS.value,
-        # ExperienceTimers.TEN_MINS.value,
+        ExperienceTimers.FIVE_MINS.value,
+        ExperienceTimers.TEN_MINS.value,
         ExperienceTimers.FIFTEEN_MINS.value,
     ]
 
@@ -542,8 +542,6 @@ def get_team_names(red_team_id: str, blue_team_id: str):
 
 
 def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[str] = None):
-    no_platform_id = set()
-
     with open(f"{LOL_ESPORTS_DATA_DIR}/tournaments.json", "r") as json_file:
         tournaments_data = json.load(json_file)
         if year:
@@ -593,7 +591,6 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                     game_number = int(game["number"])
                                 except KeyError:
                                     print(f"No platform game id for game {game_id}")
-                                    no_platform_id.add(game_id)
                                     continue
 
                                 print(
