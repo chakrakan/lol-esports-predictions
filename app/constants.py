@@ -30,15 +30,16 @@ TURRET = "turret"
 INHIBITOR = "inhibitor"
 NEXUS = "nexus"
 
+# https://www.youtube.com/watch?v=cH4S7v05Zig - LS Drag Ranks
 DRAGON_TYPE_MAPPINGS = {
     "unknown": 0,
-    "fire": 1,  # infernal
-    "water": 2,  # ocean
-    "earth": 3,  # mountain
-    "air": 4,  # cloud
-    "hextech": 5,  # hextech
-    "chemtech": 6,  # chemtech
-    "elder": 7,  #
+    "chemtech": 1,  # chemtech
+    "air": 2,  # cloud
+    "water": 3,  # ocean
+    "fire": 4,  # infernal
+    "earth": 5,  # mountain
+    "hextech": 6,  # hextech
+    "elder": 7,  # elder
 }
 
 LANE_MAPPING = {
@@ -75,13 +76,6 @@ ASSISTS = "ASSISTS"
 PARTICIPANT_BASE_INFO = ["summonerName", "championName"]
 PARTICIPANT_GENERAL_STATS = ["level", "totalGold"]
 
-### nested player stats
-# assist gold tells us best supporting player (not exclusive to support role)
-# killChampion tells us best duelist
-# shutdownReward tells us about players that focus and get shutdowns to gain advantage
-# killMinion tells us about best farmer
-# killStructure tells us about players/champions that break focus and take structures
-PARTICIPANT_GOLD_STATS = ["assist", "killChampion", "shutdownReward", "killMinion", "killStructure"]
 PARTICIPANT_GAME_STATS = [
     "MINIONS_KILLED",
     "NEURTRAL_MINIONS_KILLED",

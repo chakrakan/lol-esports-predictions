@@ -1,8 +1,10 @@
+import csv
 import gzip
 import json
 import logging
 import os
 import shutil
+from collections import defaultdict
 from datetime import datetime
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Union
@@ -21,7 +23,6 @@ from constants import (
     PARTICIPANT_BASE_INFO,
     PARTICIPANT_GAME_STATS,
     PARTICIPANT_GENERAL_STATS,
-    PARTICIPANT_GOLD_STATS,
     ROLES,
     S3_BUCKET_URL,
     STATS_UPDATE,
@@ -136,7 +137,7 @@ def get_game_data(platform_game_id: str):
             except Exception as e:
                 print("Error:", e)
         else:
-            print(f"Failed to download {platform_game_id}")
+            print(f"Failed to request {platform_game_id} from S3")
 
 
 def non_empty_equal(str1: str, str2: str):
@@ -282,6 +283,8 @@ def get_game_participant_data(
         DRX BeryL 200 Bard 10
 
     Thus, players 1-5 will always belong on the same team, and 6-10 on the other.
+
+    Games in 2023 have goldStats, but older data does not have this field!!!
     """
     game_participant_data = {}
 
@@ -296,16 +299,6 @@ def get_game_participant_data(
         if get_stats_info:
             for general_stat in PARTICIPANT_GENERAL_STATS:
                 game_participant_data[f"{base_key}_{general_stat}_{time_stamp}"] = player_info[general_stat]
-
-        if get_stats_info:
-            gold_stats = player_info["goldStats"]
-            for gold_stat in PARTICIPANT_GOLD_STATS:
-                value = float(gold_stats.get(gold_stat, 0))
-                game_participant_data[f"{base_key}_goldStat_{gold_stat}_{time_stamp}"] = value
-                game_participant_data[f"{player_info['teamID']}_total_goldStat_{gold_stat}_{time_stamp}"] = (
-                    game_participant_data.get(f"{player_info['teamID']}_total_goldStat_{gold_stat}_{time_stamp}", 0.0)
-                    + value
-                )
 
         if get_stats_info:
             player_stats = {stat["name"]: stat["value"] for stat in player_info["stats"]}
@@ -480,24 +473,98 @@ def get_team_first_blood(champion_kill_events) -> int:
     return team_id
 
 
-def get_dragon_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], dragon_kill_events) -> None:
+def get_dragon_kills_data(
+    monster_kills_dict: Dict[str, Union[int, str, None]], dragon_kill_events: Optional[List[Dict[str, Any]]]
+) -> None:
     """Get dragon kill data from the epic monster kill data. 0 placeholder for no first dragon"""
     if dragon_kill_events:
         first_dragon_event = dragon_kill_events[0]
-        monster_kills_dict["team_first_dragon_kill"] = int(first_dragon_event["killerTeamID"])
-        monster_kills_dict["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get(str(first_dragon_event["dragonType"]))
+        monster_kills_dict.update(
+            {
+                "team_first_dragon_kill": int(first_dragon_event["killerTeamID"]),
+                "first_dragon_type": DRAGON_TYPE_MAPPINGS.get(str(first_dragon_event["dragonType"])),
+            }
+        )
     else:
-        monster_kills_dict["team_first_dragon_kill"] = 0
-        monster_kills_dict["first_dragon_type"] = DRAGON_TYPE_MAPPINGS.get("unknown")
+        monster_kills_dict.update(
+            {
+                "team_first_dragon_kill": 0,
+                "first_dragon_type": DRAGON_TYPE_MAPPINGS.get("unknown"),
+            }
+        )
+
+
+def is_dragon_soul_collected(
+    monster_kills_dict: Dict[str, Union[int, str, None]],
+    dragon_kill_events: Optional[List[Dict[str, Any]]],
+):
+    """Check which dragon soul is collected by a team, if it is collected at all. This is also quite gamechanging
+    based on which elemental soul it is. First team to reach 4 dragon slayer stacks gets it.
+
+    Mapping with rank is available in consts -> DRAGON_TYPE_MAPPINGS"""
+
+    if not dragon_kill_events:
+        monster_kills_dict.update(
+            {"is_dragon_soul_collected": 0, "team_first_dragon_soul": 0, "dragon_soul_collected": 0}
+        )
+        return
+
+    dragon_type_counter = defaultdict(int)
+    blue_dragon_kills, red_dragon_kills = 0, 0
+
+    for dragon_event in dragon_kill_events:
+        dragon_type = dragon_event.get("dragonType", "unknown")
+        if dragon_type in DRAGON_TYPE_MAPPINGS:
+            dragon_type_counter[dragon_type] += 1
+
+        killer_team_id = int(dragon_event.get("killerTeamID"))
+        if killer_team_id == 100:
+            blue_dragon_kills += 1
+        elif killer_team_id == 200:
+            red_dragon_kills += 1
+
+    has_blue_taken_soul = blue_dragon_kills >= 4
+    has_red_taken_soul = red_dragon_kills >= 4
+
+    if has_blue_taken_soul or has_red_taken_soul:
+        dominant_dragon_type = max(dragon_type_counter, key=dragon_type_counter.get)
+        monster_kills_dict.update(
+            {
+                "is_dragon_soul_collected": 1,
+                "team_first_dragon_soul": 200 if has_red_taken_soul else 100,
+                "dragon_soul_collected": DRAGON_TYPE_MAPPINGS.get(dominant_dragon_type),
+            }
+        )
+    else:
+        monster_kills_dict.update(
+            {"is_dragon_soul_collected": 0, "team_first_dragon_soul": 0, "dragon_soul_collected": 0}
+        )
+
+
+def is_elder_collected(
+    monster_kills_dict: Dict[str, Union[int, str, None]], dragon_kill_events: Optional[List[Dict[str, Any]]]
+) -> bool:
+    """Check if elder is collected by a team, since it's a huge game-changing buff for the team taking it."""
+
+    is_elder_dragon_collected = 0
+    team_first_elder_dragon = 0
+
+    if dragon_kill_events:
+        elder_kill_events = [event for event in dragon_kill_events if event["dragonType"] == "elder"]
+        if elder_kill_events:
+            first_elder_event = elder_kill_events[0]
+            is_elder_dragon_collected = 1
+            team_first_elder_dragon = int(first_elder_event["killerTeamID"])
+
+    monster_kills_dict.update(
+        {"is_elder_dragon_collected": is_elder_dragon_collected, "team_first_elder_dragon": team_first_elder_dragon}
+    )
 
 
 def get_baron_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], baron_kill_events) -> None:
     """Get baron kill data from the epic monster kill data. 0 placeholder for no first baron"""
-    if baron_kill_events:
-        first_baron_event = baron_kill_events[0]
-        monster_kills_dict["team_first_baron_kill"] = int(first_baron_event["killerTeamID"])
-    else:
-        monster_kills_dict["team_first_baron_kill"] = 0
+    team_first_baron_kill = int(baron_kill_events[0]["killerTeamID"]) if baron_kill_events else 0
+    monster_kills_dict["team_first_baron_kill"] = team_first_baron_kill
 
 
 def get_herald_kills_data(monster_kills_dict: Dict[str, Union[int, str, None]], herald_kill_events) -> None:
@@ -531,6 +598,8 @@ def get_epic_monster_kills(
     get_dragon_kills_data(epic_monster_kills_data, dragon_kill_events)
     get_baron_kills_data(epic_monster_kills_data, baron_kill_events)
     get_herald_kills_data(epic_monster_kills_data, herald_kill_events)
+    is_dragon_soul_collected(epic_monster_kills_data, dragon_kill_events)
+    is_elder_collected(epic_monster_kills_data, dragon_kill_events)
 
     return epic_monster_kills_data
 
@@ -539,6 +608,14 @@ def get_team_names(red_team_id: str, blue_team_id: str):
     return team_id_to_info.get(red_team_id, {}).get("team_name", "Unknown"), team_id_to_info.get(blue_team_id, {}).get(
         "team_name", "Unknown"
     )
+
+
+def get_league_tournaments(league_id: str) -> List[str]:
+    with open(f"{LOL_ESPORTS_DATA_DIR}/leagues.json", "r") as f:
+        leagues_data = json.load(f)
+        for league in leagues_data:
+            if league["id"] == league_id:
+                return [tournament["id"] for tournament in league["tournaments"]]
 
 
 def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[str] = None):
@@ -636,10 +713,52 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         tournament_df.to_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv", index=False)
 
 
+def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> Dict[str, int]:
+    # f"{CREATED_DATA_DIR}/aggregate-games/109518549825754242/nacl_qualifiers_2_summer_2023.csv"
+    tournament_df = pd.read_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv")
+    champion_mapping = {"100": {}, "200": {}}
+
+    champion_columns = [col for col in tournament_df.columns if "championName" in col]
+
+    for col in champion_columns:
+        parts = col.split("_")
+
+        team_side = parts[1]
+        role = parts[2]
+
+        champion_counts = tournament_df[col].value_counts().to_dict()
+
+        if role not in champion_mapping[team_side]:
+            champion_mapping[team_side][role] = {}
+        for champion, count in champion_counts.items():
+            if champion not in champion_mapping[team_side][role]:
+                champion_mapping[team_side][role][champion] = 0
+            champion_mapping[team_side][role][champion] += count
+
+    # Save the champion mapping dictionary as a JSON file
+    with open(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}_champion_mapping.json", "w") as file:
+        json.dump(champion_mapping, file)
+
+
 if __name__ == "__main__":
     # game https://www.youtube.com/watch?v=gapSIdUT8Us
     tournament_to_slug_mapping = get_tournament_to_stage_slug_mapping()
     print(len(tournament_to_slug_mapping))
     team_id_to_info = get_team_id_to_info_mapping()
     print(len(team_id_to_info))
-    aggregate_game_data(by_tournament_id="110733838935136200")  # LCS Challengers - only 2 tournaments, good to test
+    # league_tournaments = get_league_tournaments(league_id="107898214974993351")
+    # print(league_tournaments)
+
+    test_tournaments = [
+        "110733838935136200",
+        "107898708099217418",
+        "110424377524465827",
+        "110428723804419399",
+        "110349992504762921",
+    ]
+    # for tournament_id in test_tournaments:
+    #     aggregate_game_data(by_tournament_id=tournament_id)
+    get_champion_occurrences_from_aggregate_tournament(
+        league_id="109518549825754242", tournament_slug="nacl_qualifiers_2_summer_2023"
+    )
+    # aggregate_game_data(by_tournament_id="107898708099217418")
