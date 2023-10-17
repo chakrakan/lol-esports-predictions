@@ -633,6 +633,10 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         mappings_data = json.load(json_file)
         mappings = {esports_game["esportsGameId"]: esports_game for esports_game in mappings_data}
 
+    if not tournaments_data:
+        print(f"No tournament data for tournament ID: {by_tournament_id}")
+        return "", ""
+
     for tournament in tournaments_data:
         tournament_slug = tournament.get("slug", "")
         league_id = tournament.get("leagueId", "")
@@ -675,6 +679,10 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                     f"Processing tournament: {tournament['name']}, stage: {stage_name}, game: {game_id} "
                                 )
                                 retrieved_game_data = get_game_data(platform_game_id)
+
+                                if not retrieved_game_data:
+                                    continue
+
                                 team_blue, team_red, game_winner = get_team_side_data(
                                     mapping_game_data=game_data_from_mapping,
                                     tournament_game_data=game,
@@ -715,8 +723,11 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         return league_id, tournament_slug
 
 
-def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> Dict[str, int]:
+def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> None:
     # f"{CREATED_DATA_DIR}/aggregate-games/109518549825754242/nacl_qualifiers_2_summer_2023.csv"
+    if os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}_champion_mapping.json"):
+        return
+
     tournament_df = pd.read_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv")
     champion_mapping = {"100": {}, "200": {}}
 
@@ -758,11 +769,12 @@ if __name__ == "__main__":
     #     "105266074488398661",
     # ]
 
-    league_tournaments = get_league_tournaments(league_id="105549980953490846")
+    league_tournaments = get_league_tournaments(league_id="106827757669296909")
     print(league_tournaments)
     for tournament_id in league_tournaments:
         league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
-        get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
+        if league_id and tournament_slug:
+            get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
 
     # test_tournaments = [
     #     "110733838935136200",
