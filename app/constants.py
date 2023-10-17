@@ -9,7 +9,6 @@ TEAM_ID_TO_INFO_MAPPING_PATH = f"{CREATED_DATA_DIR}/team_id_to_info_mapping.json
 
 ####### util consts
 S3_BUCKET_URL = "https://power-rankings-dataset-gprhack.s3.us-west-2.amazonaws.com/games"
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 # method consts
 STR_SIDE_MAPPING = {"blue": 100, "red": 200}
@@ -21,6 +20,7 @@ BUILDING_DESTROYED = "building_destroyed"
 CHAMPION_KILL = "champion_kill"
 EPIC_MONSTER_KILL = "epic_monster_kill"
 STATS_UPDATE = "stats_update"
+GAME_INFO = "game_info"
 
 # Kill stats
 FIRST_BLOOD = "firstBlood"
@@ -34,8 +34,8 @@ NEXUS = "nexus"
 DRAGON_TYPE_MAPPINGS = {
     "unknown": 0,
     "chemtech": 1,  # chemtech
-    "air": 2,  # cloud
-    "water": 3,  # ocean
+    "water": 2,  # ocean
+    "air": 3,  # cloud
     "fire": 4,  # infernal
     "earth": 5,  # mountain
     "hextech": 6,  # hextech

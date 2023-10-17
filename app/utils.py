@@ -7,7 +7,7 @@ import shutil
 from collections import defaultdict
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import requests
@@ -17,6 +17,7 @@ from constants import (
     CREATED_DATA_DIR,
     DRAGON_TYPE_MAPPINGS,
     EPIC_MONSTER_KILL,
+    GAME_INFO,
     GAMES_DIR,
     LANE_MAPPING,
     LOL_ESPORTS_DATA_DIR,
@@ -29,7 +30,6 @@ from constants import (
     STR_SIDE_MAPPING,
     TEAM_ID_TO_INFO_MAPPING_PATH,
     TEAM_STATS,
-    TIME_FORMAT,
     TOURNAMENT_TO_SLUGS_MAPPING_PATH,
     TURRET,
     ExperienceTimers,
@@ -209,24 +209,10 @@ def get_game_winner(game_end_winner, winning_side_from_tournament) -> int:
     return game_winner
 
 
-def get_game_date(zulu_time_stamp: str):
-    return datetime.strptime(zulu_time_stamp, TIME_FORMAT).date()
-
-
 def get_game_event_data(game_json_data):
     """Gets all the relevant information from the `game_info` eventType."""
-    game_start = game_json_data[0]
-    game_end = game_json_data[-1]
-
-    game_info_event_data = {}
-
-    game_info_event_data["game_date"] = get_game_date(game_start["eventTime"])
-    game_info_event_data["game_duration"] = game_end["gameTime"] // 1000  # ms -> seconds
-    game_info_event_data["game_patch"] = game_start["gameVersion"]
-
-    participant_data = get_game_participant_data(game_start["participants"], get_base_info=True)
-
     (
+        game_info_events,
         turret_destroyed_events,
         champion_kill_events,
         dragon_events,
@@ -234,6 +220,17 @@ def get_game_event_data(game_json_data):
         herald_events,
         stats_update_events,
     ) = get_filtered_events_from_game_data(game_json_data)
+
+    game_start = game_info_events[0]
+    game_end = game_json_data[-1]
+
+    game_info_event_data = {}
+
+    game_info_event_data["game_date"] = game_start["eventTime"].split("T")[0]
+    game_info_event_data["game_duration"] = game_end["gameTime"] // 1000  # ms -> seconds
+    game_info_event_data["game_patch"] = game_start.get("gameVersion", "unknown")
+
+    participant_data = get_game_participant_data(game_start["participants"], get_base_info=True)
 
     epic_monsters_killed_data = get_epic_monster_kills(
         dragon_kill_events=dragon_events, baron_kill_events=baron_events, herald_kill_events=herald_events
@@ -345,8 +342,11 @@ def get_filtered_events_from_game_data(game_json_data):
     baron_events = []
     herald_events = []
     stats_update_events = []
+    game_info_events = []
 
     for event in game_json_data:
+        if event["eventType"] == GAME_INFO:
+            game_info_events.append(event)
         if event["eventType"] == STATS_UPDATE:
             stats_update_events.append(event)
         if event["eventType"] == BUILDING_DESTROYED and event["buildingType"] == TURRET:
@@ -361,6 +361,7 @@ def get_filtered_events_from_game_data(game_json_data):
             herald_events.append(event)
 
     return (
+        game_info_events,
         turret_destroyed_events,
         champion_kill_events,
         dragon_events,
@@ -618,7 +619,7 @@ def get_league_tournaments(league_id: str) -> List[str]:
                 return [tournament["id"] for tournament in league["tournaments"]]
 
 
-def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[str] = None):
+def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[str] = None) -> Tuple[str, str]:
     with open(f"{LOL_ESPORTS_DATA_DIR}/tournaments.json", "r") as json_file:
         tournaments_data = json.load(json_file)
         if year:
@@ -636,7 +637,7 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         tournament_slug = tournament.get("slug", "")
         league_id = tournament.get("leagueId", "")
         if os.path.isfile(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv"):
-            continue
+            return league_id, tournament_slug
         tournament_id = tournament.get("id", "")
         tournament_name = tournament.get("name", "")
         start_date = tournament.get("startDate", "")
@@ -709,8 +710,9 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
         if not os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}"):
             os.makedirs(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}")
         tournament_df = pd.concat(tournament_games_df_list, ignore_index=True)
-        tournament_df.sort_values(by=["game_date"])
+        tournament_df.sort_values(by=["game_date", "game_number"], inplace=True)
         tournament_df.to_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv", index=False)
+        return league_id, tournament_slug
 
 
 def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> Dict[str, int]:
@@ -746,19 +748,31 @@ if __name__ == "__main__":
     print(len(tournament_to_slug_mapping))
     team_id_to_info = get_team_id_to_info_mapping()
     print(len(team_id_to_info))
-    # league_tournaments = get_league_tournaments(league_id="107898214974993351")
-    # print(league_tournaments)
 
-    test_tournaments = [
-        "110733838935136200",
-        "107898708099217418",
-        "110424377524465827",
-        "110428723804419399",
-        "110349992504762921",
-    ]
+    # Do multiple leagues at the same
+    # league_ids = [
+    #     "109518549825754242",
+    #     "107898214974993351",
+    #     "107407335299756365",
+    #     "105266108767593290",
+    #     "105266074488398661",
+    # ]
+
+    league_tournaments = get_league_tournaments(league_id="105549980953490846")
+    print(league_tournaments)
+    for tournament_id in league_tournaments:
+        league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
+        get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
+
+    # test_tournaments = [
+    #     "110733838935136200",
+    #     "107898708099217418",
+    #     "110424377524465827",
+    #     "110428723804419399",
+    #     "110349992504762921",
+    # ]
     # for tournament_id in test_tournaments:
-    #     aggregate_game_data(by_tournament_id=tournament_id)
-    get_champion_occurrences_from_aggregate_tournament(
-        league_id="109518549825754242", tournament_slug="nacl_qualifiers_2_summer_2023"
-    )
+    #     league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
+    #     get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
+
     # aggregate_game_data(by_tournament_id="107898708099217418")
