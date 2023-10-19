@@ -116,10 +116,13 @@ def get_game_data(platform_game_id: str):
         file_name (str): game file name
     """
     if os.path.exists(f"{GAMES_DIR}/{platform_game_id}.json"):
-        with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
-            json_data = json.load(f)
-            print(f"{platform_game_id} - game data loaded! ---")
-            return json_data
+        try:
+            with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
+                json_data = json.load(f)
+                print(f"{platform_game_id} - game data loaded! ---")
+                return json_data
+        except Exception as e:
+            print("Error:", e)
     else:
         response = requests.get(f"{S3_BUCKET_URL}/{platform_game_id}.json.gz")
         if response.status_code == 200:
@@ -353,11 +356,11 @@ def get_filtered_events_from_game_data(game_json_data):
             turret_destroyed_events.append(event)
         if event["eventType"] == CHAMPION_KILL:
             champion_kill_events.append(event)
-        if event["eventType"] == EPIC_MONSTER_KILL and event["monsterType"] == Monsters.DRAGON.value:
+        if event["eventType"] == EPIC_MONSTER_KILL and event.get("monsterType", "") == Monsters.DRAGON.value:
             dragon_events.append(event)
-        if event["eventType"] == EPIC_MONSTER_KILL and event["monsterType"] == Monsters.BARON.value:
+        if event["eventType"] == EPIC_MONSTER_KILL and event.get("monsterType", "") == Monsters.BARON.value:
             baron_events.append(event)
-        if event["eventType"] == EPIC_MONSTER_KILL and event["monsterType"] == Monsters.HERALD.value:
+        if event["eventType"] == EPIC_MONSTER_KILL and event.get("monsterType", "") == Monsters.HERALD.value:
             herald_events.append(event)
 
     return (
@@ -676,7 +679,7 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                     continue
 
                                 print(
-                                    f"Processing tournament: {tournament['name']}, stage: {stage_name}, game: {game_id} "
+                                    f"Processing tournament: {tournament['name']}, stage: {stage_name}, game: {game_id}"
                                 )
                                 retrieved_game_data = get_game_data(platform_game_id)
 
@@ -714,12 +717,17 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                 all_game_info_data = dict(base_game_info, **game_info_event_data)
                                 game_df = pd.DataFrame([all_game_info_data])
                                 tournament_games_df_list.append(game_df)
+                                print(
+                                    f"Processing tournament: {tournament['name']}, stage: {stage_name}, game: {game_id} - ✅",
+                                    end="\n\n",
+                                )
 
         if not os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}"):
             os.makedirs(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}")
         tournament_df = pd.concat(tournament_games_df_list, ignore_index=True)
         tournament_df.sort_values(by=["game_date", "game_number"], inplace=True)
         tournament_df.to_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv", index=False)
+        print(f"Completed processing league: {league_id} tournament: {tournament_slug} ✅", end="\n------------\n\n")
         return league_id, tournament_slug
 
 
@@ -760,31 +768,13 @@ if __name__ == "__main__":
     team_id_to_info = get_team_id_to_info_mapping()
     print(len(team_id_to_info))
 
-    # Do multiple leagues at the same
-    # league_ids = [
-    #     "109518549825754242",
-    #     "107898214974993351",
-    #     "107407335299756365",
-    #     "105266108767593290",
-    #     "105266074488398661",
-    # ]
-
-    league_tournaments = get_league_tournaments(league_id="106827757669296909")
-    print(league_tournaments)
+    # LCS
+    league_tournaments = get_league_tournaments(league_id="98767991299243165")
+    print(f"Total tournaments: {len(league_tournaments)}")
+    count = 0
     for tournament_id in league_tournaments:
         league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
         if league_id and tournament_slug:
+            count += 1
             get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
-
-    # test_tournaments = [
-    #     "110733838935136200",
-    #     "107898708099217418",
-    #     "110424377524465827",
-    #     "110428723804419399",
-    #     "110349992504762921",
-    # ]
-    # for tournament_id in test_tournaments:
-    #     league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
-    #     get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
-
-    # aggregate_game_data(by_tournament_id="107898708099217418")
+    print(f"Total tournaments processed: {count}/{len(league_tournaments)}")
