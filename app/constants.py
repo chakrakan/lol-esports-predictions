@@ -66,19 +66,14 @@ class Turret(Enum):
 
 ####### Player stats
 # Player nested stats
-TOTAL_DAMAGE_DEALT_TO_CHAMPIONS = "TOTAL_DAMAGE_DEALT_TO_CHAMPIONS"
-TOTAL_TIME_CROWD_CONTROL_DEALT_TO_CHAMPIONS = "TOTAL_TIME_CROWD_CONTROL_DEALT_TO_CHAMPIONS"
-CHAMPIONS_KILLED = "CHAMPIONS_KILLED"
-NUM_DEATHS = "NUM_DEATHS"
-ASSISTS = "ASSISTS"
-
 # main level player stats
 PARTICIPANT_BASE_INFO = ["summonerName", "championName"]
+PARTICIPANT_BASE_INFO_LPL = ["playerName", "championName"]
 PARTICIPANT_GENERAL_STATS = ["level", "totalGold"]
 
 PARTICIPANT_GAME_STATS = [
     "MINIONS_KILLED",
-    "NEURTRAL_MINIONS_KILLED",
+    "NEUTRAL_MINIONS_KILLED",
     "NEUTRAL_MINIONS_KILLED_ENEMY_JUNGLE",
     "CHAMPIONS_KILLED",
     "NUM_DEATHS",
@@ -120,3 +115,21 @@ class ExperienceTimers(Enum):
     FIVE_MINS = 300  # rough FB time + first dragon spawn + blast cones spawn (gank paths)
     TEN_MINS = 600  # rough herald contest time + first dragon has been taken + unleashed teleport
     FIFTEEN_MINS = 900  # mid game
+
+
+################## FEATURE GATHERING CONSTS ##################
+BLUE_CHAMPION_COLUMNS = [
+    "1_100_top_championName",
+    "2_100_jng_championName",
+    "3_100_mid_championName",
+    "4_100_adc_championName",
+    "5_100_sup_championName",
+]
+
+RED_CHAMPION_COLUMNS = [
+    "6_200_top_championName",
+    "7_200_jng_championName",
+    "8_200_mid_championName",
+    "9_200_adc_championName",
+    "10_200_sup_championName",
+]

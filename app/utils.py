@@ -1,17 +1,16 @@
-import csv
 import gzip
 import json
 import logging
 import os
 import shutil
 from collections import defaultdict
-from datetime import datetime
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import requests
 from constants import (
+    BLUE_CHAMPION_COLUMNS,
     BUILDING_DESTROYED,
     CHAMPION_KILL,
     CREATED_DATA_DIR,
@@ -22,8 +21,10 @@ from constants import (
     LANE_MAPPING,
     LOL_ESPORTS_DATA_DIR,
     PARTICIPANT_BASE_INFO,
+    PARTICIPANT_BASE_INFO_LPL,
     PARTICIPANT_GAME_STATS,
     PARTICIPANT_GENERAL_STATS,
+    RED_CHAMPION_COLUMNS,
     ROLES,
     S3_BUCKET_URL,
     STATS_UPDATE,
@@ -143,76 +144,71 @@ def get_game_data(platform_game_id: str):
             print(f"Failed to request {platform_game_id} from S3")
 
 
-def non_empty_equal(str1: str, str2: str):
+def get_direct_game_data(platform_game_id: str):
+    """Reads game data from S3 without saving it locally.
+
+    Args:
+        platform_game_id (str): The platform game ID.
     """
-    Check if both strings are non-empty and equal.
+    if os.path.exists(f"{GAMES_DIR}/{platform_game_id}.json"):
+        try:
+            with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
+                json_data = json.load(f)
+                print(f"{platform_game_id} - game data loaded! ---")
+                return json_data
+        except Exception as e:
+            print("Error:", e)
+    else:
+        try:
+            # Download the compressed JSON data from S3
+            response = requests.get(f"{S3_BUCKET_URL}/{platform_game_id}.json.gz")
+            if response.status_code == 200:
+                gzip_bytes = BytesIO(response.content)
+                with gzip.GzipFile(fileobj=gzip_bytes, mode="rb") as gzipped_file:
+                    json_data = json.load(gzipped_file)
 
-    Parameters:
-    - str1, str2: Strings to compare.
+                print(f"{platform_game_id} - game data downloaded & loaded! ---")
+                return json_data
+            else:
+                print(f"Failed to request {platform_game_id} from S3")
+        except Exception as e:
+            print("Error:", e)
 
-    Returns:
-    Boolean. True if both strings are non-empty and equal, False otherwise.
-    """
-    return bool(str1) and bool(str2) and str1 == str2
 
-
-def get_team_side_data(mapping_game_data: dict, tournament_game_data: dict, retrieved_game_data: dict):
+def get_team_side_data(mapping_game_data: dict, game_end_data: dict):
     """Detecting game winning side could be finnicky. We have been told that the tournaments file
     should NOT be used to:
     - detect red/blue side teams -> use mapping_data instead
     - detect winners -> use get participant info event from game if possible
 
-    So we are going to do a sanity check for the tournament data with the mapping data AND the actual
-    game data that provides us the info using the `winningTeam` column.
-
-    NOTE: winning team can also be missing from games, in which case, we will need to fall back
-    to the tournament data for source of truth since we don't have game win info anywhere else.
+    NOTE: winning team can also be missing from games
 
     Args:
         mapping_game_data (dict)
-        tournament_game_data (dict)
         retrieved_game_data (dict)
     """
+    team_side_data = {}
     # get all the team IDs from the various sources
     # mapping data could be empty (17 with missing "100" values 19 with "200" values)
-    mapping_blue_team_id = str(mapping_game_data.get("100", ""))
-    mapping_red_team_id = str(mapping_game_data.get("200", ""))
-    # all completed games are filtered already so we should have this data
-    tournament_blue_team_info = tournament_game_data.get("teams")[0]
-    tournament_red_team_info = tournament_game_data.get("teams")[1]
-    tournament_blue_team_id = str(tournament_blue_team_info.get("id", ""))
-    tournament_red_team_id = str(tournament_red_team_info.get("id", ""))
-    # tournaments data provides outcomes
-    if tournament_blue_team_info.get("result", {}).get("outcome") == "win":
-        winning_side_from_tournament = STR_SIDE_MAPPING["blue"]
-    else:
-        winning_side_from_tournament = STR_SIDE_MAPPING["red"]
+    team_mapping = mapping_game_data.get("teamMapping", {})
+    mapping_blue_team_id = str(team_mapping.get("100", "Unknown"))
+    mapping_red_team_id = str(team_mapping.get("200", "Unknown"))
 
     # game data also provides outcomes, but can be missing
-    game_end_winner = retrieved_game_data[-1].get("winningTeam", None)
+    game_end_winner = int(game_end_data.get("winningTeam", 0))
 
-    # if tournament data and game data match up, use either
-    # otherwise fall back to tournament data for source of truth
-    game_winner = get_game_winner(game_end_winner, winning_side_from_tournament)
+    team_side_data["team_100_blue_id"] = mapping_blue_team_id
+    team_side_data["team_200_red_id"] = mapping_red_team_id
+    team_blue_name, team_red_name = get_team_names(mapping_blue_team_id, mapping_red_team_id)
+    team_side_data["team_100_blue_name"] = team_blue_name
+    team_side_data["team_200_red_name"] = team_red_name
 
-    are_blue_teams_equal = non_empty_equal(mapping_blue_team_id, tournament_blue_team_id)
-    are_red_teams_equal = non_empty_equal(mapping_red_team_id, tournament_red_team_id)
+    team_side_data["game_winner"] = game_end_winner
 
-    team_blue_id = mapping_blue_team_id if are_blue_teams_equal else tournament_blue_team_id
-    team_red_id = mapping_red_team_id if are_red_teams_equal else tournament_red_team_id
-
-    return team_blue_id, team_red_id, game_winner
+    return team_side_data
 
 
-def get_game_winner(game_end_winner, winning_side_from_tournament) -> int:
-    if game_end_winner and game_end_winner == winning_side_from_tournament:
-        game_winner = int(game_end_winner)
-    else:
-        game_winner = winning_side_from_tournament
-    return game_winner
-
-
-def get_game_event_data(game_json_data):
+def get_game_event_data(game_json_data, mappings_data):
     """Gets all the relevant information from the `game_info` eventType."""
     (
         game_info_events,
@@ -224,7 +220,15 @@ def get_game_event_data(game_json_data):
         stats_update_events,
     ) = get_filtered_events_from_game_data(game_json_data)
 
-    game_start = game_info_events[0]
+    is_game_info_available = bool(game_info_events)
+
+    # some LPL games have no game_info events
+    # must fall back to stats_update events
+    if is_game_info_available:
+        game_start = game_info_events[0]
+    else:
+        game_start = stats_update_events[0]
+
     game_end = game_json_data[-1]
 
     game_info_event_data = {}
@@ -233,7 +237,14 @@ def get_game_event_data(game_json_data):
     game_info_event_data["game_duration"] = game_end["gameTime"] // 1000  # ms -> seconds
     game_info_event_data["game_patch"] = game_start.get("gameVersion", "unknown")
 
-    participant_data = get_game_participant_data(game_start["participants"], get_base_info=True)
+    team_side_data = get_team_side_data(
+        mapping_game_data=mappings_data,
+        game_end_data=game_end,
+    )
+
+    participant_data = get_game_participant_data(
+        game_start["participants"], get_base_info=True, is_game_info_available=is_game_info_available
+    )
 
     epic_monsters_killed_data = get_epic_monster_kills(
         dragon_kill_events=dragon_events, baron_kill_events=baron_events, herald_kill_events=herald_events
@@ -255,6 +266,7 @@ def get_game_event_data(game_json_data):
 
     return dict(
         game_info_event_data,
+        **team_side_data,
         **participant_data,
         **epic_monsters_killed_data,
         **game_status_update_data,
@@ -266,21 +278,10 @@ def get_game_participant_data(
     get_base_info: bool = False,
     get_stats_info: bool = False,
     time_stamp: Optional[str] = None,
+    is_game_info_available: Optional[bool] = True,
 ) -> Dict[str, Any]:
     """Get game participant info from the nested participants column
     within the `game_info` event.
-
-    The data is consistently setup as the following:
-        T1 Zeus 100 Gwen 1
-        T1 Oner 100 Viego 2
-        T1 Faker 100 Viktor 3
-        T1 Gumayusi 100 Varus 4
-        T1 Keria 100 Karma 5
-        DRX Kingen 200 Aatrox 6
-        DRX Pyosik 200 Hecarim 7
-        DRX Zeka 200 Azir 8
-        DRX Deft 200 Caitlyn 9
-        DRX BeryL 200 Bard 10
 
     Thus, players 1-5 will always belong on the same team, and 6-10 on the other.
 
@@ -288,13 +289,20 @@ def get_game_participant_data(
     """
     game_participant_data = {}
 
+    if is_game_info_available:
+        BASE_INFO_LIST = PARTICIPANT_BASE_INFO
+    else:
+        BASE_INFO_LIST = PARTICIPANT_BASE_INFO_LPL
+
     for player_info, role in zip(participants_data, ROLES):
         # 1_100_top = T1 Zeus, 6_200_top = DRX Kingen etc.
         base_key = f"{player_info['participantID']}_{player_info['teamID']}_{role}"
 
-        if get_base_info and all(key in player_info for key in PARTICIPANT_BASE_INFO):
-            for base_info in PARTICIPANT_BASE_INFO:
-                game_participant_data[f"{base_key}_{base_info}"] = player_info[base_info]
+        if get_base_info and all(key in player_info for key in BASE_INFO_LIST):
+            for base_info in BASE_INFO_LIST:
+                game_participant_data[
+                    f"{base_key}_{'summonerName' if base_info == 'playerName' else base_info}"
+                ] = player_info[base_info]
 
         if get_stats_info:
             for general_stat in PARTICIPANT_GENERAL_STATS:
@@ -625,12 +633,12 @@ def get_league_tournaments(league_id: str) -> List[str]:
 def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[str] = None) -> Tuple[str, str]:
     with open(f"{LOL_ESPORTS_DATA_DIR}/tournaments.json", "r") as json_file:
         tournaments_data = json.load(json_file)
-        if year:
-            tournaments_data = [
-                tournament for tournament in tournaments_data if str(tournament["startDate"]).startswith(year)
-            ]
         if by_tournament_id:
-            tournaments_data = [tournament for tournament in tournaments_data if tournament["id"] == by_tournament_id]
+            tournaments_data = [
+                tournament
+                for tournament in tournaments_data
+                if tournament["id"] == by_tournament_id and str(tournament["startDate"]).startswith(year)
+            ]
 
     with open(f"{LOL_ESPORTS_DATA_DIR}/mapping_data.json", "r") as json_file:
         mappings_data = json.load(json_file)
@@ -643,7 +651,7 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
     for tournament in tournaments_data:
         tournament_slug = tournament.get("slug", "")
         league_id = tournament.get("leagueId", "")
-        if os.path.isfile(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv"):
+        if os.path.isfile(f"{CREATED_DATA_DIR}/mapped-games/{league_id}/{tournament_slug}.csv"):
             return league_id, tournament_slug
         tournament_id = tournament.get("id", "")
         tournament_name = tournament.get("name", "")
@@ -681,17 +689,10 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                 print(
                                     f"Processing tournament: {tournament['name']}, stage: {stage_name}, game: {game_id}"
                                 )
-                                retrieved_game_data = get_game_data(platform_game_id)
+                                retrieved_game_data = get_direct_game_data(platform_game_id)
 
                                 if not retrieved_game_data:
                                     continue
-
-                                team_blue, team_red, game_winner = get_team_side_data(
-                                    mapping_game_data=game_data_from_mapping,
-                                    tournament_game_data=game,
-                                    retrieved_game_data=retrieved_game_data,
-                                )
-                                team_blue_name, team_red_name = get_team_names(team_blue, team_red)
 
                                 base_game_info = {
                                     "league_id": league_id,
@@ -706,15 +707,10 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                     "stage_name": stage_name,
                                     "stage_slug": stage_slug,
                                     "section_name": section_name,
-                                    "team_100_blue_id": team_blue,
-                                    "team_100_blue_name": team_blue_name,
-                                    "team_200_red_id": team_red,
-                                    "team_200_red_name": team_red_name,
-                                    "game_winner": game_winner,
                                 }
 
-                                game_info_event_data = get_game_event_data(retrieved_game_data)
-                                all_game_info_data = dict(base_game_info, **game_info_event_data)
+                                game_event_data = get_game_event_data(retrieved_game_data, game_data_from_mapping)
+                                all_game_info_data = dict(base_game_info, **game_event_data)
                                 game_df = pd.DataFrame([all_game_info_data])
                                 tournament_games_df_list.append(game_df)
                                 print(
@@ -722,59 +718,203 @@ def aggregate_game_data(year: Optional[str] = None, by_tournament_id: Optional[s
                                     end="\n\n",
                                 )
 
-        if not os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}"):
-            os.makedirs(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}")
+        if not os.path.exists(f"{CREATED_DATA_DIR}/mapped-games/{league_id}"):
+            os.makedirs(f"{CREATED_DATA_DIR}/mapped-games/{league_id}")
         tournament_df = pd.concat(tournament_games_df_list, ignore_index=True)
         tournament_df.sort_values(by=["game_date", "game_number"], inplace=True)
-        tournament_df.to_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv", index=False)
+        tournament_df.to_csv(f"{CREATED_DATA_DIR}/mapped-games/{league_id}/{tournament_slug}.csv", index=False)
         print(f"Completed processing league: {league_id} tournament: {tournament_slug} ✅", end="\n------------\n\n")
         return league_id, tournament_slug
 
 
-def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> None:
-    # f"{CREATED_DATA_DIR}/aggregate-games/109518549825754242/nacl_qualifiers_2_summer_2023.csv"
-    if os.path.exists(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}_champion_mapping.json"):
-        return
+def calculate_champion_stats_for_role(data, col, side):
+    role_stats = {}
+    for _, row in data.iterrows():
+        champ = row[col]
+        winner = row["game_winner"]
+        if champ not in role_stats:
+            role_stats[champ] = {"games_played": 0, "games_won": 0}
+        role_stats[champ]["games_played"] += 1
+        if winner == side:
+            role_stats[champ]["games_won"] += 1
 
-    tournament_df = pd.read_csv(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}.csv")
+    role_data = []
+    for champ, stats in role_stats.items():
+        frequency = stats["games_played"]
+        win_rate = (stats["games_won"] / stats["games_played"]) * 100
+        role_data.append({champ: frequency, "winRate": win_rate})
+
+    # sort by frequency
+    role_data = sorted(role_data, key=lambda x: list(x.values())[0], reverse=True)
+    return role_data
+
+
+def get_champion_occurrences_from_aggregate_tournament(league_id: str, tournament_slug: str) -> None:
+    # f"{CREATED_DATA_DIR}/mapped-games/109518549825754242/nacl_qualifiers_2_summer_2023.csv"
+    # if os.path.exists(f"{CREATED_DATA_DIR}/mapped-games/{league_id}/{tournament_slug}_champion_mapping.json"):
+    #     return
+
+    tournament_df = pd.read_csv(f"{CREATED_DATA_DIR}/mapped-games/{league_id}/{tournament_slug}.csv")
     champion_mapping = {"100": {}, "200": {}}
 
-    champion_columns = [col for col in tournament_df.columns if "championName" in col]
-
-    for col in champion_columns:
-        parts = col.split("_")
-
-        team_side = parts[1]
-        role = parts[2]
-
-        champion_counts = tournament_df[col].value_counts().to_dict()
-
-        if role not in champion_mapping[team_side]:
-            champion_mapping[team_side][role] = {}
-        for champion, count in champion_counts.items():
-            if champion not in champion_mapping[team_side][role]:
-                champion_mapping[team_side][role][champion] = 0
-            champion_mapping[team_side][role][champion] += count
+    for blue_col in BLUE_CHAMPION_COLUMNS:
+        role = blue_col.split("_")[2]
+        champion_mapping["100"][role] = calculate_champion_stats_for_role(tournament_df, blue_col, 100)
+    for red_col in RED_CHAMPION_COLUMNS:
+        role = red_col.split("_")[2]
+        champion_mapping["200"][role] = calculate_champion_stats_for_role(tournament_df, red_col, 200)
 
     # Save the champion mapping dictionary as a JSON file
-    with open(f"{CREATED_DATA_DIR}/aggregate-games/{league_id}/{tournament_slug}_champion_mapping.json", "w") as file:
+    with open(f"{CREATED_DATA_DIR}/mapped-games/{league_id}/{tournament_slug}_champion_mapping.json", "w") as file:
         json.dump(champion_mapping, file)
 
 
+def concatenate_csv_files(directory_path, output_file) -> None:
+    """
+    Concatenate all .csv files in a directory with games from 2023 into a single CSV file.
+    Targets the games from following regions: LPL, LEC, LCK, LCS, PCS, VCS, CBLOL, LJL, LLA
+
+    Parameters:
+    - directory_path (str): Path to the directory containing the CSV files.
+    - output_file (str): Path to the output CSV file.
+    """
+    specific_leagues = [
+        "98767991299243165",  # LCS
+        "98767991310872058",  # LCK
+        "98767991314006698",  # LPL
+        "98767991302996019",  # LEC
+        "104366947889790212",  # PCS
+        "107213827295848783",  # VCS
+        "98767991332355509",  # CBLOL
+        "98767991349978712",  # LJL
+        "101382741235120470",  # LLA
+        "98767991325878492",  # MSI
+        "98767975604431411",  # Worlds
+    ]
+
+    csv_files = [
+        (league_id, f)
+        for league_id in specific_leagues
+        for f in os.listdir(f"{directory_path}/{league_id}")
+        if f.endswith(".csv") and ("2022" in f or "2023" in f)
+    ]
+    dfs = []
+
+    for league_id, csv_file in csv_files:
+        df = pd.read_csv(os.path.join(directory_path, league_id, csv_file))
+        dfs.append(df)
+
+    concatenated_df = pd.concat(dfs, ignore_index=True)
+    concatenated_df.to_csv(output_file, index=False)
+    print(f"All CSV files concatenated and saved to {output_file}")
+
+
+def get_num_rows_to_swap(tournament_df: pd.DataFrame):
+    rows_to_swap = set()
+    for index, row in tournament_df.iterrows():
+        blue_team_code = get_team_code_from_id(str(row["team_100_blue_id"]))
+        red_team_code = get_team_code_from_id(str(row["team_200_red_id"]))
+
+        # Check if player summoner names start with the respective team codes
+        if not (
+            row["1_100_top_summonerName"].startswith(blue_team_code)
+            and row["2_100_jng_summonerName"].startswith(blue_team_code)
+        ):
+            rows_to_swap.add(index)
+        elif not (
+            row["6_200_top_summonerName"].startswith(red_team_code)
+            and row["7_200_jng_summonerName"].startswith(red_team_code)
+        ):
+            rows_to_swap.add(index)
+    return rows_to_swap
+
+
+def delete_games_directory(games_dir: str):
+    try:
+        shutil.rmtree(games_dir)
+        print(f"Directory '{games_dir}' and its contents have been deleted.")
+    except OSError as e:
+        print(f"Error: {e}")
+
+
+def get_team_code_from_id(team_id):
+    return team_id_to_info.get(str(team_id), {}).get("team_code", "Unknown")
+
+
 if __name__ == "__main__":
-    # game https://www.youtube.com/watch?v=gapSIdUT8Us
+    #### Setup base https://www.youtube.com/watch?v=gapSIdUT8Us
     tournament_to_slug_mapping = get_tournament_to_stage_slug_mapping()
     print(len(tournament_to_slug_mapping))
     team_id_to_info = get_team_id_to_info_mapping()
     print(len(team_id_to_info))
 
-    # LCS
-    league_tournaments = get_league_tournaments(league_id="98767991299243165")
-    print(f"Total tournaments: {len(league_tournaments)}")
-    count = 0
-    for tournament_id in league_tournaments:
-        league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id)
-        if league_id and tournament_slug:
-            count += 1
-            get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
-    print(f"Total tournaments processed: {count}/{len(league_tournaments)}")
+    #### Data Aggregation
+    # league_ids = [
+    #     "110372322609949919",
+    #     "110371976858004491",
+    #     "105549980953490846",
+    #     "98767991335774713",
+    #     "106827757669296909",
+    #     "108203770023880322",
+    #     "109545772895506419",
+    #     "105266108767593290",
+    #     "105266111679554379",
+    #     "105266106309666619",
+    #     "105266091639104326",
+    #     "105266074488398661",
+    #     "105266088231437431",
+    #     "105266094998946936",
+    #     "105266101075764040",
+    #     "107407335299756365",
+    #     "105266098308571975",
+    #     "105266103462388553",
+    #     "100695891328981122",
+    #     "98767991295297326",
+    #     "98767975604431411",
+    #     "98767991325878492",
+    #     "107213827295848783",
+    #     "98767991343597634",
+    #     "104366947889790212",
+    #     "98767991314006698",
+    #     "101382741235120470",
+    #     "98767991349978712",
+    #     "98767991302996019",
+    #     "105709090213554609",
+    #     "98767991355908944",
+    #     "98767991310872058",
+    #     "98767991332355509",
+    #     "107898214974993351",
+    #     "109518549825754242",
+    #     "109511549831443335",
+    #     "98767991299243165",
+    # ]
+    # specific_leagues = [
+    #     "98767991299243165",  # LCS
+    #     "98767991310872058",  # LCK
+    #     "98767991314006698",  # LPL
+    #     "98767991302996019",  # LEC
+    #     "104366947889790212",  # PCS
+    #     "107213827295848783",  # VCS
+    #     "98767991332355509",  # CBLOL
+    #     "98767991349978712",  # LJL
+    #     "101382741235120470",  # LLA
+    #     "98767991325878492",  # MSI
+    #     "98767975604431411",  # Worlds
+    # ]
+    # for league_id in specific_leagues:
+    #     league_tournaments = get_league_tournaments(league_id=league_id)
+    #     print(f"Total tournaments: {len(league_tournaments)}")
+    #     count = 0
+    #     for tournament_id in league_tournaments:
+    #         league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id, year="2022")
+    #         if league_id and tournament_slug:
+    #             count += 1
+    #             get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
+    #         # delete_games_directory(GAMES_DIR)
+    #     print(f"Total tournaments processed: {count}/{len(league_tournaments)}")
+
+    #### Concatenate all CSV files
+    # concatenate_csv_files(
+    #     directory_path=f"{CREATED_DATA_DIR}/mapped-games",
+    #     output_file=f"{CREATED_DATA_DIR}/mapped-combined-games.csv",
+    # )
