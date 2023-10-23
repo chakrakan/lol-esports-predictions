@@ -2,6 +2,7 @@ from enum import Enum
 
 ####### Directory consts
 CREATED_DATA_DIR = "esports-data/created"
+MAPPED_GAMES_DIR = f"{CREATED_DATA_DIR}/mapped-games"
 LOL_ESPORTS_DATA_DIR = "esports-data/lol-esports-data"
 GAMES_DIR = "games"
 TOURNAMENT_TO_SLUGS_MAPPING_PATH = f"{CREATED_DATA_DIR}/tournament_to_stage_slugs_mapping.json"
@@ -133,3 +134,19 @@ RED_CHAMPION_COLUMNS = [
     "9_200_adc_championName",
     "10_200_sup_championName",
 ]
+
+GOLD_DIFF_BLUE = [
+    "100_blue_totalGold_300",
+    "100_blue_totalGold_600",
+    "100_blue_totalGold_900",
+    "100_blue_totalGold_game_end",
+]
+
+GOLD_DIFF_RED = [
+    "200_red_totalGold_300",
+    "200_red_totalGold_600",
+    "200_red_totalGold_900",
+    "200_red_totalGold_game_end",
+]
+
+CLASSIFICATION_CODES = {"Dominant": 1, "Intermediate": 0, "Weaker/Passive": -1}
