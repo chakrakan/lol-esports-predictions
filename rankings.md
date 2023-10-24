@@ -75,6 +75,61 @@
 ]
 ```
 
+### GET by tournament ID, plus stage = "Groups"
+
+```json
+[{'ELO': 1643.972809700411,
+  'rank': 1,
+  'team_code': 'EG',
+  'team_id': '103461966951059521',
+  'team_name': 'Evil Geniuses LG'},
+ {'ELO': 1584.7308305488502,
+  'rank': 2,
+  'team_code': 'TL',
+  'team_id': '98926509885559666',
+  'team_name': 'Team Liquid Honda'},
+ {'ELO': 1581.4950932026827,
+  'rank': 3,
+  'team_code': '100',
+  'team_id': '99294153828264740',
+  'team_name': '100 Thieves'},
+ {'ELO': 1556.3445262435491,
+  'rank': 4,
+  'team_code': 'C9',
+  'team_id': '98767991877340524',
+  'team_name': 'Cloud9'},
+ {'ELO': 1518.4436578368473,
+  'rank': 5,
+  'team_code': 'FLY',
+  'team_id': '98926509892121852',
+  'team_name': 'FlyQuest'},
+ {'ELO': 1497.446040517379,
+  'rank': 6,
+  'team_code': 'CLG',
+  'team_id': '98926509884398584',
+  'team_name': 'CLG'},
+ {'ELO': 1442.257055302382,
+  'rank': 7,
+  'team_code': 'GG',
+  'team_id': '99294153824386385',
+  'team_name': 'Golden Guardians'},
+ {'ELO': 1411.0298718124673,
+  'rank': 8,
+  'team_code': 'DIG',
+  'team_id': '98926509883054987',
+  'team_name': 'Dignitas'},
+ {'ELO': 1401.459667414539,
+  'rank': 9,
+  'team_code': 'TSM',
+  'team_id': '98767991860392497',
+  'team_name': 'TSM'},
+ {'ELO': 1362.8204474208924,
+  'rank': 10,
+  'team_code': 'IMT',
+  'team_id': '98767991930907107',
+  'team_name': 'Immortals Progressive'}]
+```
+
 ### GET global rankings, default limit 20
 
 ```json
