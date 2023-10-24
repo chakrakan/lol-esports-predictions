@@ -96,8 +96,8 @@ def get_team_rankings(team_ids: List[str]):
 
 
 if __name__ == "__main__":
-    pprint.pprint(get_tournament_rankings("107458335260330212"))
-    pprint.pprint(get_global_rankings())
+    # pprint.pprint(get_tournament_rankings("107458335260330212"))
+    # pprint.pprint(get_global_rankings())
     pprint.pprint(
         get_team_rankings(["98767991853197861", "99566404852189289", "106972778172351142", "98767991877340524"])
     )
