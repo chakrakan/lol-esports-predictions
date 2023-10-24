@@ -18,3 +18,8 @@ if __name__ == "__main__":
         get_team_rankings(["98767991853197861", "99566404852189289", "106972778172351142", "98767991877340524"])
     )
 ```
+
+### Resources
+
+- [Write Up](https://github.com/chakrakan/lol-esports-predictions/blob/main/write-up.md)
+- [Sample Rankings](https://github.com/chakrakan/lol-esports-predictions/blob/main/rankings.md)
