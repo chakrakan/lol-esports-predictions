@@ -51,6 +51,8 @@ def get_sorted_tournaments_by_date(directory_path: str, output_file: str):
         "101382741235120470",  # LLA
         "98767991325878492",  # MSI
         "98767975604431411",  # Worlds
+        "98767991343597634",  # TCL
+        "105709090213554609",  # LCO
     ]
 
     csv_files = [

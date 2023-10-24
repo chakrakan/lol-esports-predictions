@@ -150,3 +150,40 @@ GOLD_DIFF_RED = [
 ]
 
 CLASSIFICATION_CODES = {"Dominant": 1, "Intermediate": 0, "Weaker/Passive": -1}
+
+# modifiers extrapolated from https://www.gosugamers.net/lol/rankings
+# and https://www.esports.net/news/lol/lol-worlds-power-rankings/
+MAJOR_REGION_MODIFIERS = {
+    "LPL": 1.7,
+    "LCK": 1.65,
+    "LEC": 1.4,
+    "LCS": 1.2,
+    "PCS": 0.4,
+    "CBLOL": 0.3,
+    "VCS": 0.2,
+    "TCL": 0.2,
+    "LJL": 0.2,
+    "LLA": 0.2,
+    "LCO": 0.2,
+}
+
+REGION_ELO_MODIFIERS = {
+    "LPL": 1500,
+    "LCK": 1500,
+    "LEC": 1500,
+    "LCS": 1500,
+    "PCS": 1400,
+    "CBLOL": 1400,
+    "VCS": 1350,
+    "TCL": 1350,
+    "LJL": 1350,
+    "LLA": 1350,
+    "LCO": 1350,
+}
+
+BASE_K_VALUE_PRE_MSI_2022 = 50
+BASE_K_VALUE_MSI_2022 = 100
+BASE_K_VALUE_PRE_WORLDS_2022 = 34
+BASE_K_VALUE_WORLDS_2022 = 150
+BASE_K_VALUE_MSI_2023 = 100
+BASE_K_VALUE_2023 = 30

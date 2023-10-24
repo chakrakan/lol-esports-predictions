@@ -1,15 +1,31 @@
+import json
 import os
 from typing import Optional
 
 import pandas as pd
-from constants import BLUE_CHAMPION_COLUMNS, CREATED_DATA_DIR, MAPPED_GAMES_DIR, RED_CHAMPION_COLUMNS
+from constants import (
+    BASE_K_VALUE_2023,
+    BASE_K_VALUE_MSI_2022,
+    BASE_K_VALUE_MSI_2023,
+    BASE_K_VALUE_PRE_MSI_2022,
+    BASE_K_VALUE_PRE_WORLDS_2022,
+    BASE_K_VALUE_WORLDS_2022,
+    BLUE_CHAMPION_COLUMNS,
+    CREATED_DATA_DIR,
+    MAJOR_REGION_MODIFIERS,
+    MAPPED_GAMES_DIR,
+    RED_CHAMPION_COLUMNS,
+    REGION_ELO_MODIFIERS,
+)
 from feature_utils import get_op_champions
+
+from utils import get_league_tournaments
 
 SORTED_LEAGUE_TOURNAMENTS = f"{CREATED_DATA_DIR}/sorted-tournaments.csv"
 
 
 def league_id_to_name():
-    specified_leagues = ["LPL", "LEC", "LCK", "LCS", "PCS", "VCS", "CBLOL", "LJL", "LLA", "Worlds", "MSI"]
+    specified_leagues = ["LPL", "LEC", "LCK", "LCS", "PCS", "TCL", "LCO", "VCS", "CBLOL", "LJL", "LLA", "Worlds", "MSI"]
     leagues_df = pd.read_csv(f"{CREATED_DATA_DIR}/updated-leagues.csv")
     filtered_leagues_df = leagues_df[leagues_df["League Name"].isin(specified_leagues)]
 
@@ -17,27 +33,92 @@ def league_id_to_name():
     return league_id_to_name_mapping
 
 
-def process_league_ratings(league_id: int):
-    sorted_league_tournaments = pd.read_csv(SORTED_LEAGUE_TOURNAMENTS)
-    league_name = league_id_to_name()[league_id]
-    all_tournaments_in_order = sorted_league_tournaments[sorted_league_tournaments["league_id"] == league_id]
-    all_tournaments_in_order.reset_index(inplace=True, drop=True)
+def get_team_to_league_mapping():
+    if os.path.exists(f"{CREATED_DATA_DIR}/team_name_to_league_mapping.json"):
+        with open(f"{CREATED_DATA_DIR}/team_name_to_league_mapping.json", "r") as f:
+            team_to_league_mapping = json.load(f)
+        return team_to_league_mapping
+    league_id_to_teams_mapping = get_league_to_teams_mapping()
+    team_to_league_mapping = dict()
+    for league_name, teams in league_id_to_teams_mapping.items():
+        if league_name not in ["Worlds", "MSI"]:
+            for team in teams:
+                team_to_league_mapping[team] = league_name
+    with open(f"{CREATED_DATA_DIR}/team_name_to_league_mapping.json", "w") as f:
+        json.dump(team_to_league_mapping, f)
+    return team_to_league_mapping
 
-    for index, row in all_tournaments_in_order.iterrows():
+
+def get_league_to_teams_mapping():
+    if os.path.exists(f"{CREATED_DATA_DIR}/league_id_to_teams_mapping.json"):
+        with open(f"{CREATED_DATA_DIR}/league_id_to_teams_mapping.json", "r") as f:
+            league_name_to_teams_mapping = json.load(f)
+        return league_name_to_teams_mapping
+
+    league_id_to_name_mapping = league_id_to_name()
+    league_name_to_teams_mapping = dict()
+    for league_id, league_name in league_id_to_name_mapping.items():
+        csv_files = [
+            (league_id, f)
+            for f in os.listdir(f"{MAPPED_GAMES_DIR}/{league_id}")
+            if f.endswith(".csv") and "elo" not in f
+        ]
+        all_unique_teams = set()
+        for _, tournament_file in csv_files:
+            tournament_df = pd.read_csv(f"{MAPPED_GAMES_DIR}/{league_id}/{tournament_file}")
+            all_unique_teams = all_unique_teams | get_unique_team_names(tournament_df)
+        league_name_to_teams_mapping[league_name] = list(all_unique_teams)
+    with open(f"{CREATED_DATA_DIR}/league_id_to_teams_mapping.json", "w") as f:
+        json.dump(league_name_to_teams_mapping, f)
+    return league_name_to_teams_mapping
+
+
+def process_league_ratings(by_date: Optional[str] = None):
+    sorted_league_tournaments = pd.read_csv(SORTED_LEAGUE_TOURNAMENTS)
+    if by_date:
+        sorted_league_tournaments = sorted_league_tournaments[sorted_league_tournaments["game_date"] < by_date]
+    sorted_league_tournaments.reset_index(inplace=True, drop=True)
+
+    for index, row in sorted_league_tournaments.iterrows():
+        league_id = row["league_id"]
+        league_name = league_id_to_name()[league_id]
         print(f"Processing {league_name} - {row['tournament_slug']}...")
         df = pd.read_csv(f"{MAPPED_GAMES_DIR}/{league_id}/{row['tournament_slug']}.csv")
-        last_stage = get_unique_stage_names(df)[-1]
         if index == 0:
             get_tournament_elo(df)
         else:
-            prev_tournament = all_tournaments_in_order.iloc[index - 1]["tournament_slug"]
-            existing_elo_df = pd.read_csv(f"{MAPPED_GAMES_DIR}/{league_id}/{prev_tournament}_{last_stage}_elo.csv")
+            prev_tournament = sorted_league_tournaments.iloc[index - 1]["tournament_slug"]
+            prev_league_id = sorted_league_tournaments.iloc[index - 1]["league_id"]
+            prev_tournament_df = pd.read_csv(f"{MAPPED_GAMES_DIR}/{prev_league_id}/{prev_tournament}.csv")
+            last_stage = get_unique_stage_names(prev_tournament_df)[-1]
+            existing_elo_df = pd.read_csv(f"{MAPPED_GAMES_DIR}/{prev_league_id}/{prev_tournament}_{last_stage}_elo.csv")
             get_tournament_elo(df, existing_elo_df)
         print(f"{league_name} - {row['tournament_slug']} processed!")
 
 
 def get_unique_stage_names(tournament_df: pd.DataFrame) -> list:
     return tournament_df["stage_name"].unique().tolist()
+
+
+def get_unique_team_names(tournament_df: pd.DataFrame) -> set:
+    return set(tournament_df["team_100_blue_name"].unique()) | set(tournament_df["team_200_red_name"].unique())
+
+
+def get_team_name_to_id_mapping():
+    if os.path.exists(f"{CREATED_DATA_DIR}/team_name_to_id_mapping.json"):
+        with open(f"{CREATED_DATA_DIR}/team_name_to_id_mapping.json", "r") as f:
+            reverse_mapping = json.load(f)
+        return reverse_mapping
+
+    with open(f"{CREATED_DATA_DIR}/team_id_to_info_mapping.json", "r") as f:
+        mapping_data = json.load(f)
+
+    reverse_mapping = {
+        team_info["team_name"]: {"ID": team_id, "team_code": team_info["team_code"]}
+        for team_id, team_info in mapping_data.items()
+    }
+    with open(f"{CREATED_DATA_DIR}/team_name_to_id_mapping.json", "w") as f:
+        json.dump(reverse_mapping, f)
 
 
 def get_tournament_elo(tournament_df: pd.DataFrame, existing_elo_df: Optional[pd.DataFrame] = None):
@@ -50,7 +131,8 @@ def get_tournament_elo(tournament_df: pd.DataFrame, existing_elo_df: Optional[pd
             elo_df = pd.DataFrame(
                 {
                     "Team": list(stage_teams),
-                    "ELO": [1500] * len(stage_teams),
+                    "ELO": [REGION_ELO_MODIFIERS[league_id_to_name()[stage_df.iloc[0]["league_id"]]]]
+                    * len(stage_teams),
                 }
             )
         elif existing_elo_df is not None:
@@ -62,7 +144,10 @@ def get_tournament_elo(tournament_df: pd.DataFrame, existing_elo_df: Optional[pd
 
         new_teams = stage_teams - set(elo_df["Team"].unique())
         for team in new_teams:
-            elo_df.loc[len(elo_df)] = {"Team": team, "ELO": 1500}
+            elo_df.loc[len(elo_df)] = {
+                "Team": team,
+                "ELO": REGION_ELO_MODIFIERS[get_team_to_league_mapping()[team]],
+            }
         stage_df.loc[:, "winning_team"] = stage_df.apply(
             lambda row: row["team_100_blue_name"] if row["game_winner"] == 100 else row["team_200_red_name"], axis=1
         )
@@ -75,11 +160,37 @@ def get_tournament_elo(tournament_df: pd.DataFrame, existing_elo_df: Optional[pd
         )
 
 
+def get_k_value(game_row: pd.Series):
+    # Time specific Base K Values
+    BASE_K_VALUE = BASE_K_VALUE_PRE_MSI_2022
+
+    if game_row["game_date"] > MSI_2022_DATE:
+        BASE_K_VALUE = BASE_K_VALUE_PRE_WORLDS_2022
+
+    if game_row["game_date"] > WORLDS_2022_DATE:
+        BASE_K_VALUE = BASE_K_VALUE_2023
+
+    ### Tournament specific Base K values
+    if game_row["tournament_slug"] == "msi_2022":
+        BASE_K_VALUE = BASE_K_VALUE_MSI_2022
+    if game_row["tournament_slug"] == "worlds_2022":
+        BASE_K_VALUE = BASE_K_VALUE_WORLDS_2022
+    if game_row["tournament_slug"] == "msi_2023":
+        BASE_K_VALUE = BASE_K_VALUE_MSI_2023
+
+    return BASE_K_VALUE
+
+
 def process_tournament_elo(tournament_df: pd.DataFrame, elo_data: pd.DataFrame):
     for _, row in tournament_df.iterrows():
-        k_value = 30
         winner = row["winning_team"]
         loser = row["team_100_blue_name"] if winner != row["team_100_blue_name"] else row["team_200_red_name"]
+
+        # Weighted K value based on when game was played
+        # early 2022 = high K to get initial standings
+        # as time goes, lower K values + region modifier to add effect
+        # where a team from a weaker region wins against a stronger region, rewarding them better
+        k_value = get_k_value(row) * MAJOR_REGION_MODIFIERS[get_team_to_league_mapping()[loser]]
 
         league_id, tournament_slug, total_games = (
             tournament_df.iloc[0]["league_id"],
@@ -104,8 +215,9 @@ def process_tournament_elo(tournament_df: pd.DataFrame, elo_data: pd.DataFrame):
         if winner == row["team_100_blue_name"]:
             for role in BLUE_CHAMPION_COLUMNS:
                 if row[role] in op_champions:
-                    k_value += 1
+                    k_value += 2
 
+            # Features: team FB, FT, FD, FH, FBaron
             if row["team_first_blood"] == 100:
                 k_value += 2
             if row["team_first_turret_destroyed"] == 100:
@@ -116,12 +228,18 @@ def process_tournament_elo(tournament_df: pd.DataFrame, elo_data: pd.DataFrame):
                 k_value += 2  # first herald early adv maintained reward
             if row["team_first_baron_kill"] == 100:
                 k_value += 4  # first baron early adv maintained reward
+
+            # KD ratio reward for dominance
+            total_deaths = 1 if row["100_blue_deaths_game_end"] == 0 else row["100_blue_deaths_game_end"]
+            kd_ratio = row["100_blue_championsKills_game_end"] / total_deaths
+            if kd_ratio > 1.5:
+                k_value += 5
         else:
-            k_value += 2  # winning from red side is harder (draft and gameplay wise)
+            k_value += 4  # winning from red side is harder (draft and gameplay wise)
             # bigger reward for winning from red side
             for role in RED_CHAMPION_COLUMNS:
                 if row[role] in op_champions:
-                    k_value += 1
+                    k_value += 2
 
             if row["team_first_blood"] == 200:
                 k_value += 2
@@ -134,12 +252,28 @@ def process_tournament_elo(tournament_df: pd.DataFrame, elo_data: pd.DataFrame):
             if row["team_first_baron_kill"] == 200:
                 k_value += 4  # first baron early adv maintained reward
 
-        # Feat 3: Game duration
+            total_deaths = 1 if row["200_red_deaths_game_end"] == 0 else row["200_red_deaths_game_end"]
+            kd_ratio = row["200_red_championsKills_game_end"] / total_deaths
+            if kd_ratio > 1.5:
+                k_value += 5
+
+        # Feat 3: Vision score diff
+        total_vision_score = abs(row["100_total_VISION_SCORE_game_end"] - row["200_total_VISION_SCORE_game_end"])
+        k_value += total_vision_score // 10
+
+        # Feat 4: Total damage to champions diff
+        total_dmg_to_champions = abs(
+            row["100_total_TOTAL_DAMAGE_DEALT_TO_CHAMPIONS_game_end"]
+            - row["200_total_TOTAL_DAMAGE_DEALT_TO_CHAMPIONS_game_end"]
+        )
+        k_value += total_dmg_to_champions // 10000
+
+        # Feat 5: Game duration - reward shorter more dominant games
         game_duration = row["game_duration"]
         if 1800 > game_duration > 1500:  # 30-25 min
-            k_value += 2  # shorter games reward (more dominance)
+            k_value += 3
         elif game_duration < 1500:  # under 25 min
-            k_value += 4
+            k_value += 6
 
         new_winner_elo, new_loser_elo = update_weighted_elo(
             elo_data.loc[elo_data["Team"] == winner, "ELO"].values[0],
@@ -176,18 +310,10 @@ def update_weighted_elo(winner_elo: float, loser_elo: float, k_value: int = 30):
 
 
 if __name__ == "__main__":
-    specific_leagues = [
-        98767991299243165,  # LCS
-        98767991310872058,  # LCK
-        98767991314006698,  # LPL
-        98767991302996019,  # LEC
-        104366947889790212,  # PCS
-        107213827295848783,  # VCS
-        98767991332355509,  # CBLOL
-        98767991349978712,  # LJL
-        101382741235120470,  # LLA
-        98767991325878492,  # MSI
-        98767975604431411,  # Worlds
-    ]
-    for league_id in specific_leagues:
-        process_league_ratings(league_id)
+    ## Global Event Dates
+    MSI_2022_DATE = "2022-05-10"
+    WORLDS_2022_DATE = "2022-09-29"
+    MSI_2023_DATE = "2023-05-02"
+
+    process_league_ratings()
+    # get_team_name_to_id_mapping()

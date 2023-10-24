@@ -109,41 +109,6 @@ def get_team_side_by_value(value: int) -> str:
     return None
 
 
-def get_game_data(platform_game_id: str):
-    """A modified version of the method provided by Riot/AWS for downloading game data.
-    Reads from local if available, else downloads, writes to file, and returns json.
-
-    Args:
-        file_name (str): game file name
-    """
-    if os.path.exists(f"{GAMES_DIR}/{platform_game_id}.json"):
-        try:
-            with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
-                json_data = json.load(f)
-                print(f"{platform_game_id} - game data loaded! ---")
-                return json_data
-        except Exception as e:
-            print("Error:", e)
-    else:
-        response = requests.get(f"{S3_BUCKET_URL}/{platform_game_id}.json.gz")
-        if response.status_code == 200:
-            try:
-                gzip_bytes = BytesIO(response.content)
-                with gzip.GzipFile(fileobj=gzip_bytes, mode="rb") as gzipped_file:
-                    with open(f"{GAMES_DIR}/{platform_game_id}.json", "wb") as output_file:
-                        shutil.copyfileobj(gzipped_file, output_file)
-                        print(f"{platform_game_id}.json written")
-
-                with open(f"{GAMES_DIR}/{platform_game_id}.json", "r") as f:
-                    json_data = json.load(f)
-                    print(f"{platform_game_id} - game data downloaded & loaded! ---")
-                    return json_data
-            except Exception as e:
-                print("Error:", e)
-        else:
-            print(f"Failed to request {platform_game_id} from S3")
-
-
 def get_direct_game_data(platform_game_id: str):
     """Reads game data from S3 without saving it locally.
 
@@ -888,30 +853,32 @@ if __name__ == "__main__":
     #     "109511549831443335",
     #     "98767991299243165",
     # ]
-    # specific_leagues = [
-    #     "98767991299243165",  # LCS
-    #     "98767991310872058",  # LCK
-    #     "98767991314006698",  # LPL
-    #     "98767991302996019",  # LEC
-    #     "104366947889790212",  # PCS
-    #     "107213827295848783",  # VCS
-    #     "98767991332355509",  # CBLOL
-    #     "98767991349978712",  # LJL
-    #     "101382741235120470",  # LLA
-    #     "98767991325878492",  # MSI
-    #     "98767975604431411",  # Worlds
-    # ]
-    # for league_id in specific_leagues:
-    #     league_tournaments = get_league_tournaments(league_id=league_id)
-    #     print(f"Total tournaments: {len(league_tournaments)}")
-    #     count = 0
-    #     for tournament_id in league_tournaments:
-    #         league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id, year="2022")
-    #         if league_id and tournament_slug:
-    #             count += 1
-    #             get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
-    #         # delete_games_directory(GAMES_DIR)
-    #     print(f"Total tournaments processed: {count}/{len(league_tournaments)}")
+    specific_leagues = [
+        # "98767991299243165",  # LCS
+        # "98767991310872058",  # LCK
+        # "98767991314006698",  # LPL
+        # "98767991302996019",  # LEC
+        # "104366947889790212",  # PCS
+        # "107213827295848783",  # VCS
+        # "98767991332355509",  # CBLOL
+        # "98767991349978712",  # LJL
+        # "101382741235120470",  # LLA
+        # "98767991325878492",  # MSI
+        # "98767975604431411",  # Worlds
+        "98767991343597634",  # TCL
+        "105709090213554609",  # LCO
+    ]
+    for league_id in specific_leagues:
+        league_tournaments = get_league_tournaments(league_id=league_id)
+        print(f"Total tournaments: {len(league_tournaments)}")
+        count = 0
+        for tournament_id in league_tournaments:
+            league_id, tournament_slug = aggregate_game_data(by_tournament_id=tournament_id, year="2023")
+            if league_id and tournament_slug:
+                count += 1
+                get_champion_occurrences_from_aggregate_tournament(league_id=league_id, tournament_slug=tournament_slug)
+            # delete_games_directory(GAMES_DIR)
+        print(f"Total tournaments processed: {count}/{len(league_tournaments)}")
 
     #### Concatenate all CSV files
     # concatenate_csv_files(
