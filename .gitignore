@@ -12,8 +12,6 @@ __pycache__
 /.anaconda
 /.envs
 /env
-/esports-data
-/lol-esports-data
 /games
 /games-parquet
 .env

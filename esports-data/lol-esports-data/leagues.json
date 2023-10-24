@@ -1,0 +1,1602 @@
+[
+  {
+    "id": "98767991299243165",
+    "name": "LCS",
+    "slug": "lcs",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/LCSNew-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/LCSNew-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/LCSNew-01-FullonDark.png",
+    "region": "NORTH AMERICA",
+    "priority": 1,
+    "displayPriority": {
+      "position": 0,
+      "status": "selected"
+    },
+    "tournaments": [
+      {
+        "id": "110303581083678395"
+      },
+      {
+        "id": "109517090066605615"
+      },
+      {
+        "id": "108206581962155974"
+      },
+      {
+        "id": "107458367237283414"
+      },
+      {
+        "id": "107458335260330212"
+      },
+      {
+        "id": "105658534671026792"
+      },
+      {
+        "id": "105788932118361426"
+      },
+      {
+        "id": "109428868589633757"
+      },
+      {
+        "id": "105522217230238828"
+      },
+      {
+        "id": "104174992692075107"
+      },
+      {
+        "id": "103462439438682788"
+      },
+      {
+        "id": "108300620375000370"
+      },
+      {
+        "id": "108294935083112239"
+      },
+      {
+        "id": "108288780705657082"
+      },
+      {
+        "id": "108283378783680768"
+      },
+      {
+        "id": "108007809203463350"
+      },
+      {
+        "id": "107784927885285215"
+      },
+      {
+        "id": "107744640257699883"
+      },
+      {
+        "id": "106972812538132507"
+      },
+      {
+        "id": "107741488941545959"
+      },
+      {
+        "id": "107045060626269295"
+      },
+      {
+        "id": "107719921883398026"
+      },
+      {
+        "id": "107697401518332544"
+      },
+      {
+        "id": "107656643139734824"
+      },
+      {
+        "id": "107620592294752774"
+      }
+    ]
+  },
+  {
+    "id": "109511549831443335",
+    "name": "LCS Challengers",
+    "slug": "north_american_challenger_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1671126494281_NACL23_Icon_WHT1.png",
+    "lightImage": "http://static.lolesports.com/leagues/1671126494281_NACL23_Icon_WHT1.png",
+    "darkImage": "http://static.lolesports.com/leagues/1671126494281_NACL23_Icon_BLK1.png",
+    "region": "NORTH AMERICA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 1,
+      "status": "selected"
+    },
+    "tournaments": [
+      {
+        "id": "110574243270525539"
+      },
+      {
+        "id": "109518697660746274"
+      }
+    ]
+  },
+  {
+    "id": "109518549825754242",
+    "name": "LCS Challengers Qualifiers",
+    "slug": "lcs_challengers_qualifiers",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1671126518545_NACL23_Icon_WHT1.png",
+    "lightImage": "http://static.lolesports.com/leagues/1671126518545_NACL23_Icon_WHT1.png",
+    "darkImage": "http://static.lolesports.com/leagues/1671126518545_NACL23_Icon_BLK1.png",
+    "region": "NORTH AMERICA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 2,
+      "status": "selected"
+    },
+    "tournaments": [
+      {
+        "id": "110894544221659776"
+      },
+      {
+        "id": "110733838935136200"
+      },
+      {
+        "id": "110428603624764603"
+      },
+      {
+        "id": "110138704782649096"
+      },
+      {
+        "id": "109974742840567627"
+      },
+      {
+        "id": "109518742310926152"
+      }
+    ]
+  },
+  {
+    "id": "107898214974993351",
+    "name": "College Championship",
+    "slug": "college_championship",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1646396098648_CollegeChampionshiplogo.png",
+    "lightImage": "http://static.lolesports.com/leagues/1646396098648_CollegeChampionshiplogo.png",
+    "darkImage": "http://static.lolesports.com/leagues/1665138903737_College_League_of_Legends_2019_logo.webp",
+    "region": "NORTH AMERICA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 3,
+      "status": "selected"
+    },
+    "tournaments": [
+      {
+        "id": "107898708099217418"
+      }
+    ]
+  },
+  {
+    "id": "98767991332355509",
+    "name": "CBLOL",
+    "slug": "cblol-brazil",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/cblol-logo-symbol-offwhite.png",
+    "lightImage": "http://static.lolesports.com/leagues/cblol-logo-symbol-offwhite.png",
+    "darkImage": "http://static.lolesports.com/leagues/cblol-logo-symbol-black.png",
+    "region": "BRAZIL",
+    "priority": 204,
+    "displayPriority": {
+      "position": 0,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110413046183015975"
+      },
+      {
+        "id": "109523641416750631"
+      },
+      {
+        "id": "108211865716506571"
+      },
+      {
+        "id": "107405837336179496"
+      },
+      {
+        "id": "106297375705058741"
+      },
+      {
+        "id": "105539760572983266"
+      },
+      {
+        "id": "104202471497759152"
+      },
+      {
+        "id": "103478354329449186"
+      },
+      {
+        "id": "102147202571739078"
+      },
+      {
+        "id": "101383793244817602"
+      },
+      {
+        "id": "100205576338370838"
+      },
+      {
+        "id": "99566408235138456"
+      }
+    ]
+  },
+  {
+    "id": "98767991310872058",
+    "name": "LCK",
+    "slug": "lck",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/lck-color-on-black.png",
+    "lightImage": "http://static.lolesports.com/leagues/lck-color-on-black.png",
+    "darkImage": "http://static.lolesports.com/leagues/lck-color-on-white.png",
+    "region": "KOREA",
+    "priority": 4,
+    "displayPriority": {
+      "position": 1,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110909366079472439"
+      },
+      {
+        "id": "110371551277508787"
+      },
+      {
+        "id": "109625152894842837"
+      },
+      {
+        "id": "108797577868041021"
+      },
+      {
+        "id": "108195478954601542"
+      },
+      {
+        "id": "107418445247362001"
+      },
+      {
+        "id": "106840590962292347"
+      },
+      {
+        "id": "106269654659501670"
+      },
+      {
+        "id": "105522984810490982"
+      },
+      {
+        "id": "104174613295388764"
+      },
+      {
+        "id": "103540363364808496"
+      },
+      {
+        "id": "102181142473043418"
+      },
+      {
+        "id": "109478595377766234"
+      },
+      {
+        "id": "109473592653126678"
+      },
+      {
+        "id": "101388913417992988"
+      },
+      {
+        "id": "100205573522838487"
+      },
+      {
+        "id": "109472224539377660"
+      },
+      {
+        "id": "109468403671242972"
+      },
+      {
+        "id": "99566404601075616"
+      },
+      {
+        "id": "109467297671986286"
+      },
+      {
+        "id": "109462843692030951"
+      },
+      {
+        "id": "109461739707114350"
+      },
+      {
+        "id": "109461292917902160"
+      },
+      {
+        "id": "109445541215037058"
+      },
+      {
+        "id": "109444869705769128"
+      },
+      {
+        "id": "109441091720628455"
+      },
+      {
+        "id": "109440642555058105"
+      },
+      {
+        "id": "109440320603801592"
+      },
+      {
+        "id": "109434488623686609"
+      },
+      {
+        "id": "109434103072103929"
+      },
+      {
+        "id": "109433362199747894"
+      },
+      {
+        "id": "109479322498002624"
+      }
+    ]
+  },
+  {
+    "id": "98767991355908944",
+    "name": "LCL",
+    "slug": "lcl",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1593016885758_LCL-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1593016885758_LCL-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1593016885772_LCL-03-FullonLight.png",
+    "region": "COMMONWEALTH OF INDEPENDENT STATES",
+    "priority": 209,
+    "displayPriority": {
+      "position": 2,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "107417471555810057"
+      },
+      {
+        "id": "106269769724268826"
+      },
+      {
+        "id": "105663539171928276"
+      },
+      {
+        "id": "110429321464170890"
+      },
+      {
+        "id": "110412360196989975"
+      },
+      {
+        "id": "110435858786009956"
+      },
+      {
+        "id": "110435531035300377"
+      },
+      {
+        "id": "110441433278896011"
+      },
+      {
+        "id": "110441119491168485"
+      },
+      {
+        "id": "110452684391414465"
+      },
+      {
+        "id": "110446876240436729"
+      },
+      {
+        "id": "110458354672238716"
+      },
+      {
+        "id": "110453006238802559"
+      }
+    ]
+  },
+  {
+    "id": "105709090213554609",
+    "name": "LCO",
+    "slug": "lco",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/lco-color-white.png",
+    "lightImage": "http://static.lolesports.com/leagues/lco-color-white.png",
+    "darkImage": "http://static.lolesports.com/leagues/lco-color-dark.png",
+    "region": "OCEANIA",
+    "priority": 207,
+    "displayPriority": {
+      "position": 3,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "109675608880518030"
+      },
+      {
+        "id": "109675619694467439"
+      },
+      {
+        "id": "108197674522551242"
+      },
+      {
+        "id": "107439320897210747"
+      },
+      {
+        "id": "106273204408903419"
+      },
+      {
+        "id": "105747961298296953"
+      },
+      {
+        "id": "109639302112483684"
+      },
+      {
+        "id": "109632411128070811"
+      }
+    ]
+  },
+  {
+    "id": "98767991302996019",
+    "name": "LEC",
+    "slug": "lec",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592516184297_LEC-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592516184297_LEC-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592516184299_LEC-03-FullonLight.png",
+    "region": "EMEA",
+    "priority": 3,
+    "displayPriority": {
+      "position": 4,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110848560874526298"
+      },
+      {
+        "id": "110429332688604205"
+      },
+      {
+        "id": "109919226376366902"
+      },
+      {
+        "id": "109466537705744120"
+      },
+      {
+        "id": "108176672283976661"
+      },
+      {
+        "id": "107417059262120466"
+      },
+      {
+        "id": "106269680921022418"
+      },
+      {
+        "id": "105522958532258735"
+      },
+      {
+        "id": "104169295253189561"
+      },
+      {
+        "id": "103462459318635408"
+      },
+      {
+        "id": "109427822736905228"
+      },
+      {
+        "id": "102147201778412187"
+      },
+      {
+        "id": "109427411147317375"
+      },
+      {
+        "id": "101383793622305540"
+      },
+      {
+        "id": "109423067696022268"
+      },
+      {
+        "id": "100205575629449176"
+      },
+      {
+        "id": "109421587469439501"
+      },
+      {
+        "id": "99322214712278618"
+      },
+      {
+        "id": "109407348769591764"
+      },
+      {
+        "id": "109188748532737193"
+      },
+      {
+        "id": "109189749746037163"
+      },
+      {
+        "id": "109188863217118371"
+      },
+      {
+        "id": "109218068328726599"
+      },
+      {
+        "id": "109212709764395955"
+      },
+      {
+        "id": "109229629611154474"
+      },
+      {
+        "id": "109218949924663566"
+      },
+      {
+        "id": "109349946712116171"
+      },
+      {
+        "id": "109274702204084948"
+      }
+    ]
+  },
+  {
+    "id": "98767991349978712",
+    "name": "LJL",
+    "slug": "ljl-japan",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592516354053_LJL-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592516354053_LJL-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592516354056_LJL-03-FullonLight.png",
+    "region": "JAPAN",
+    "priority": 208,
+    "displayPriority": {
+      "position": 5,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110395308894756789"
+      },
+      {
+        "id": "109710208772220245"
+      },
+      {
+        "id": "108231751506773283"
+      },
+      {
+        "id": "107455808271204256"
+      },
+      {
+        "id": "106269757536651711"
+      },
+      {
+        "id": "105562833911566614"
+      },
+      {
+        "id": "104169308670244006"
+      },
+      {
+        "id": "103540397353089204"
+      },
+      {
+        "id": "102147204088046087"
+      },
+      {
+        "id": "101428372650853326"
+      },
+      {
+        "id": "109055718152043307"
+      },
+      {
+        "id": "109054419919088344"
+      },
+      {
+        "id": "109031138017871490"
+      },
+      {
+        "id": "109030936392726416"
+      },
+      {
+        "id": "109030266425341631"
+      },
+      {
+        "id": "109030099487086096"
+      }
+    ]
+  },
+  {
+    "id": "101382741235120470",
+    "name": "LLA",
+    "slug": "lla",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592516315279_LLA-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592516315279_LLA-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592516315281_LLA-03-FullonLight.png",
+    "region": "LATIN AMERICA",
+    "priority": 206,
+    "displayPriority": {
+      "position": 6,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110411420269584926"
+      },
+      {
+        "id": "109672513958565698"
+      },
+      {
+        "id": "108916413227302339"
+      },
+      {
+        "id": "108197521933954516"
+      },
+      {
+        "id": "107530554766055254"
+      },
+      {
+        "id": "106845973122821257"
+      },
+      {
+        "id": "106269744788213905"
+      },
+      {
+        "id": "105551618304300204"
+      },
+      {
+        "id": "104237136838348356"
+      },
+      {
+        "id": "103540419468532110"
+      },
+      {
+        "id": "102147203732523011"
+      },
+      {
+        "id": "101383792604229595"
+      }
+    ]
+  },
+  {
+    "id": "98767991314006698",
+    "name": "LPL",
+    "slug": "lpl",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592516115322_LPL-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592516115322_LPL-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592516115325_LPL-03-FullonLight.png",
+    "region": "CHINA",
+    "priority": 201,
+    "displayPriority": {
+      "position": 7,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110825936250664572"
+      },
+      {
+        "id": "110428848766564346"
+      },
+      {
+        "id": "109669600527985422"
+      },
+      {
+        "id": "108888310291632913"
+      },
+      {
+        "id": "108431300950695970"
+      },
+      {
+        "id": "107417779630700437"
+      },
+      {
+        "id": "106860829994219982"
+      },
+      {
+        "id": "106269484328946755"
+      },
+      {
+        "id": "105516880821527383"
+      },
+      {
+        "id": "104282610668475466"
+      },
+      {
+        "id": "103462420723438502"
+      },
+      {
+        "id": "102181141746404105"
+      },
+      {
+        "id": "101388912982111577"
+      },
+      {
+        "id": "100205574095502272"
+      },
+      {
+        "id": "99566404873639114"
+      }
+    ]
+  },
+  {
+    "id": "104366947889790212",
+    "name": "PCS",
+    "slug": "pcs",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592515942679_PCS-01-FullonDark.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592515942679_PCS-01-FullonDark.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592515942693_PCS-03-FullonLight.png",
+    "region": "HONG KONG, MACAU, TAIWAN",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 8,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110847340080101648"
+      },
+      {
+        "id": "110423696147088301"
+      },
+      {
+        "id": "110017385374098523"
+      },
+      {
+        "id": "109704924270305512"
+      },
+      {
+        "id": "108166997301178190"
+      },
+      {
+        "id": "107693721179065689"
+      },
+      {
+        "id": "106269875362449980"
+      },
+      {
+        "id": "108883606278048211"
+      },
+      {
+        "id": "104372946599464241"
+      },
+      {
+        "id": "108795630627503777"
+      }
+    ]
+  },
+  {
+    "id": "98767991343597634",
+    "name": "TCL",
+    "slug": "turkiye-sampiyonluk-ligi",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1672744089338_TCL_ICON_COLOR.png",
+    "lightImage": "http://static.lolesports.com/leagues/1672744089338_TCL_ICON_COLOR.png",
+    "darkImage": "http://static.lolesports.com/leagues/1672744089341_TCL_ICON_COLOR.jpg",
+    "region": "EMEA",
+    "priority": 203,
+    "displayPriority": {
+      "position": 9,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110429898578299667"
+      },
+      {
+        "id": "109467188125028146"
+      },
+      {
+        "id": "108197589213750000"
+      },
+      {
+        "id": "107566408953200568"
+      },
+      {
+        "id": "106269459003590888"
+      },
+      {
+        "id": "105562822074055437"
+      },
+      {
+        "id": "104248884617992857"
+      },
+      {
+        "id": "103495775740097550"
+      },
+      {
+        "id": "102235771755352569"
+      },
+      {
+        "id": "101422616581636308"
+      },
+      {
+        "id": "100205576975941700"
+      },
+      {
+        "id": "99566406080517611"
+      },
+      {
+        "id": "109189886261421571"
+      }
+    ]
+  },
+  {
+    "id": "107213827295848783",
+    "name": "VCS",
+    "slug": "vcs",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1677578094811_VCS_SYMBOL_TITANIUM_RGB.png",
+    "lightImage": "http://static.lolesports.com/leagues/1677578094811_VCS_SYMBOL_TITANIUM_RGB.png",
+    "darkImage": "http://static.lolesports.com/leagues/1677578094813_VCS_SYMBOL_VOID_RGB.png",
+    "region": "VIETNAM",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 10,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110416959491275651"
+      },
+      {
+        "id": "109749565997987636"
+      },
+      {
+        "id": "109067014926424947"
+      },
+      {
+        "id": "109066101880117809"
+      },
+      {
+        "id": "107256578722475733"
+      }
+    ]
+  },
+  {
+    "id": "98767991325878492",
+    "name": "MSI",
+    "slug": "msi",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592594634248_MSIDarkBG.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592594634248_MSIDarkBG.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592594634251_MSILightBG.png",
+    "region": "INTERNATIONAL",
+    "priority": 301,
+    "displayPriority": {
+      "position": 11,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110198981276611770"
+      },
+      {
+        "id": "107905284983470149"
+      },
+      {
+        "id": "105873410870441926"
+      },
+      {
+        "id": "101978171914014519"
+      },
+      {
+        "id": "100205573044644938"
+      },
+      {
+        "id": "109383739753133748"
+      },
+      {
+        "id": "109381717382073421"
+      }
+    ]
+  },
+  {
+    "id": "98767975604431411",
+    "name": "Worlds",
+    "slug": "worlds",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592594612171_WorldsDarkBG.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592594612171_WorldsDarkBG.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592594612180_WorldsLightBG.png",
+    "region": "INTERNATIONAL",
+    "priority": 300,
+    "displayPriority": {
+      "position": 12,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "108998961191900167"
+      },
+      {
+        "id": "106926282333089592"
+      },
+      {
+        "id": "104841804583318464"
+      },
+      {
+        "id": "102804906674705057"
+      },
+      {
+        "id": "100783238182986407"
+      },
+      {
+        "id": "98767991971246908"
+      },
+      {
+        "id": "109381371670969695"
+      },
+      {
+        "id": "109393484577193964"
+      },
+      {
+        "id": "107385933322514307"
+      },
+      {
+        "id": "107125010264727827"
+      }
+    ]
+  },
+  {
+    "id": "98767991295297326",
+    "name": "All-Star Event",
+    "slug": "all-star",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1592594737227_ASEDarkBG.png",
+    "lightImage": "http://static.lolesports.com/leagues/1592594737227_ASEDarkBG.png",
+    "darkImage": "http://static.lolesports.com/leagues/1592594745587_ASELightBG.png",
+    "region": "INTERNATIONAL",
+    "priority": 302,
+    "displayPriority": {
+      "position": 13,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "105386292089445027"
+      },
+      {
+        "id": "103240747053720909"
+      },
+      {
+        "id": "101157821672845982"
+      }
+    ]
+  },
+  {
+    "id": "100695891328981122",
+    "name": "EMEA Masters",
+    "slug": "emea_masters",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1669375535108_EM_Icon_Green1.png",
+    "lightImage": "http://static.lolesports.com/leagues/1669375535108_EM_Icon_Green1.png",
+    "darkImage": "http://static.lolesports.com/leagues/1669375535111_EM_Icon_Green1.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 14,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110535609415063567"
+      },
+      {
+        "id": "110016463793610620"
+      },
+      {
+        "id": "110016413865287161"
+      },
+      {
+        "id": "108746562333593659"
+      },
+      {
+        "id": "108746545967156991"
+      },
+      {
+        "id": "107893386210553711"
+      },
+      {
+        "id": "107893136888836553"
+      },
+      {
+        "id": "106748850929174796"
+      },
+      {
+        "id": "106744065768553123"
+      },
+      {
+        "id": "105990084003609117"
+      },
+      {
+        "id": "105945560578760612"
+      },
+      {
+        "id": "104727755399361381"
+      },
+      {
+        "id": "103936903203607374"
+      },
+      {
+        "id": "102804705856335355"
+      }
+    ]
+  },
+  {
+    "id": "105266103462388553",
+    "name": "La Ligue Française",
+    "slug": "lfl",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/LFL_Logo_2020_black1.png",
+    "lightImage": "http://static.lolesports.com/leagues/LFL_Logo_2020_black1.png",
+    "darkImage": "http://static.lolesports.com/leagues/1665139063842_LFL_Logo_2020.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 15,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110424922266960422"
+      },
+      {
+        "id": "109467129925344897"
+      },
+      {
+        "id": "108158179538212767"
+      },
+      {
+        "id": "107468370558963709"
+      },
+      {
+        "id": "106313258182079617"
+      },
+      {
+        "id": "105568157420311272"
+      }
+    ]
+  },
+  {
+    "id": "105266098308571975",
+    "name": "NLC",
+    "slug": "nlc",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1641490922073_nlc_logo.png",
+    "lightImage": "http://static.lolesports.com/leagues/1641490922073_nlc_logo.png",
+    "darkImage": "http://static.lolesports.com/leagues/1640783523550_NLCMasterLogoRGB-onBlack1.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 16,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110425082378454783"
+      },
+      {
+        "id": "109467209705050129"
+      },
+      {
+        "id": "108172137675600410"
+      },
+      {
+        "id": "107417432877679361"
+      },
+      {
+        "id": "106340473013395166"
+      },
+      {
+        "id": "105562790070504659"
+      }
+    ]
+  },
+  {
+    "id": "107407335299756365",
+    "name": "Elite Series",
+    "slug": "elite_series",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1641287979138_EliteSeriesMarkWhite.png",
+    "lightImage": "http://static.lolesports.com/leagues/1641287979138_EliteSeriesMarkWhite.png",
+    "darkImage": "http://static.lolesports.com/leagues/1641287979141_EliteSeriesMarkBlack.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 17,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110424377524465827"
+      },
+      {
+        "id": "109467335886224883"
+      },
+      {
+        "id": "108172713549542364"
+      },
+      {
+        "id": "107563481236862420"
+      }
+    ]
+  },
+  {
+    "id": "105266101075764040",
+    "name": "Liga Portuguesa",
+    "slug": "liga_portuguesa",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1649884876085_LPLOL_2021_ISO_G-c389e9ae85c243e4f76a8028bbd9ca1609c2d12bc47c3709a9250d1b3ca43f58.png",
+    "lightImage": "http://static.lolesports.com/leagues/1649884876085_LPLOL_2021_ISO_G-c389e9ae85c243e4f76a8028bbd9ca1609c2d12bc47c3709a9250d1b3ca43f58.png",
+    "darkImage": "http://static.lolesports.com/leagues/1649884876087_LPLOL_2021_ISO_G-c389e9ae85c243e4f76a8028bbd9ca1609c2d12bc47c3709a9250d1b3ca43f58.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 18,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110425027634430773"
+      },
+      {
+        "id": "109467367966036144"
+      },
+      {
+        "id": "108171576055718204"
+      },
+      {
+        "id": "107417530552861626"
+      },
+      {
+        "id": "106311748110571694"
+      },
+      {
+        "id": "105596427125578664"
+      }
+    ]
+  },
+  {
+    "id": "105266094998946936",
+    "name": "PG Nationals",
+    "slug": "pg_nationals",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/PG_Nationals_Logo_White.png",
+    "lightImage": "http://static.lolesports.com/leagues/PG_Nationals_Logo_White.png",
+    "darkImage": "http://static.lolesports.com/leagues/1665139119802_PG_Nationals_2021_Logo.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 19,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110444946767792846"
+      },
+      {
+        "id": "109539799647393670"
+      },
+      {
+        "id": "108166853206827117"
+      },
+      {
+        "id": "107457033672415830"
+      },
+      {
+        "id": "106319725617882570"
+      },
+      {
+        "id": "105539775517396799"
+      }
+    ]
+  },
+  {
+    "id": "105266088231437431",
+    "name": "Ultraliga",
+    "slug": "ultraliga",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1639390623717_ULTRALIGA_logo_sq_cyan.png",
+    "lightImage": "http://static.lolesports.com/leagues/1639390623717_ULTRALIGA_logo_sq_cyan.png",
+    "darkImage": "http://static.lolesports.com/leagues/1639390623725_ULTRALIGA_logo_sq_cyan.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 20,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110310652404523974"
+      },
+      {
+        "id": "109539822190865259"
+      },
+      {
+        "id": "108171991239909862"
+      },
+      {
+        "id": "107416436272657995"
+      },
+      {
+        "id": "106301901327374691"
+      },
+      {
+        "id": "105562656842928291"
+      }
+    ]
+  },
+  {
+    "id": "105266074488398661",
+    "name": "SuperLiga",
+    "slug": "superliga",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/SL21-V-white.png",
+    "lightImage": "http://static.lolesports.com/leagues/SL21-V-white.png",
+    "darkImage": "http://static.lolesports.com/leagues/1664881020042_LVP_Superliga.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 21,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110349992504762921"
+      },
+      {
+        "id": "109467087406180264"
+      },
+      {
+        "id": "108171648025800968"
+      },
+      {
+        "id": "107468241207873310"
+      },
+      {
+        "id": "106312505037543791"
+      },
+      {
+        "id": "105562529622379161"
+      }
+    ]
+  },
+  {
+    "id": "105266091639104326",
+    "name": "Prime League",
+    "slug": "primeleague",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/PrimeLeagueResized.png",
+    "lightImage": "http://static.lolesports.com/leagues/PrimeLeagueResized.png",
+    "darkImage": "http://static.lolesports.com/leagues/1664881238559_Prime_Leaguelogo_square1.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 22,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110343648526792583"
+      },
+      {
+        "id": "109539770333903339"
+      },
+      {
+        "id": "108158210393938046"
+      },
+      {
+        "id": "107417741193036913"
+      },
+      {
+        "id": "106305935741165084"
+      },
+      {
+        "id": "105562556573338448"
+      }
+    ]
+  },
+  {
+    "id": "105266106309666619",
+    "name": "Hitpoint Masters",
+    "slug": "hitpoint_masters",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1641465237186_HM_white.png",
+    "lightImage": "http://static.lolesports.com/leagues/1641465237186_HM_white.png",
+    "darkImage": "http://static.lolesports.com/leagues/1641465237186_HM_black.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 23,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110444842958969834"
+      },
+      {
+        "id": "109467357559212289"
+      },
+      {
+        "id": "108155621258059329"
+      },
+      {
+        "id": "107575089348919003"
+      },
+      {
+        "id": "106419362022708584"
+      },
+      {
+        "id": "105596516630284353"
+      }
+    ]
+  },
+  {
+    "id": "105266111679554379",
+    "name": "Esports Balkan League",
+    "slug": "esports_balkan_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1625735031226_ebl_crest-whitePNG.png",
+    "lightImage": "http://static.lolesports.com/leagues/1625735031226_ebl_crest-whitePNG.png",
+    "darkImage": "http://static.lolesports.com/leagues/1625735031228_ebl_crest-bluePNG.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 24,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110418013822985087"
+      },
+      {
+        "id": "109467260897553204"
+      },
+      {
+        "id": "108155414582681011"
+      },
+      {
+        "id": "107468404707086558"
+      },
+      {
+        "id": "106385973090763431"
+      },
+      {
+        "id": "105596416963238709"
+      }
+    ]
+  },
+  {
+    "id": "105266108767593290",
+    "name": "Greek Legends League",
+    "slug": "greek_legends",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/GLL_LOGO_WHITE.png",
+    "lightImage": "http://static.lolesports.com/leagues/GLL_LOGO_WHITE.png",
+    "darkImage": "http://static.lolesports.com/leagues/GLL_LOGO_BLACK.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 25,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110428723804419399"
+      },
+      {
+        "id": "109467311739792322"
+      },
+      {
+        "id": "108171529103782009"
+      },
+      {
+        "id": "107575345394138670"
+      },
+      {
+        "id": "106295147953460518"
+      },
+      {
+        "id": "105522904800920947"
+      }
+    ]
+  },
+  {
+    "id": "109545772895506419",
+    "name": "Arabian League",
+    "slug": "arabian_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1671535837069_Emblemwhite1.png",
+    "lightImage": "http://static.lolesports.com/leagues/1671535837069_Emblemwhite1.png",
+    "darkImage": "http://static.lolesports.com/leagues/1671535837072_EmblemBlack1.png",
+    "region": "EMEA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 26,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110422923164198764"
+      },
+      {
+        "id": "109545777182748074"
+      }
+    ]
+  },
+  {
+    "id": "108203770023880322",
+    "name": "LCK Academy",
+    "slug": "lck_academy",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1651061948793_LCK_Academy_Series_AL_LCK_White_RGB.png",
+    "lightImage": "http://static.lolesports.com/leagues/1651061948793_LCK_Academy_Series_AL_LCK_White_RGB.png",
+    "darkImage": "http://static.lolesports.com/leagues/1651061948795_LCK_Academy_Series_AL_LCK_Black_RGB.png",
+    "region": "KOREA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 27,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "108256075285852973"
+      }
+    ]
+  },
+  {
+    "id": "106827757669296909",
+    "name": "LJL Academy",
+    "slug": "ljl_academy",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1630062215891_ljl-al_logo_gradient.png",
+    "lightImage": "http://static.lolesports.com/leagues/1630062215891_ljl-al_logo_gradient.png",
+    "darkImage": "http://static.lolesports.com/leagues/1630062215894_ljl-al_logo_gradient.png",
+    "region": "JAPAN",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 28,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110507407705819578"
+      },
+      {
+        "id": "108216929091956060"
+      },
+      {
+        "id": "106828136191077157"
+      }
+    ]
+  },
+  {
+    "id": "98767991335774713",
+    "name": "LCK Challengers",
+    "slug": "lck_challengers_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/lck-cl-white.png",
+    "lightImage": "http://static.lolesports.com/leagues/lck-cl-white.png",
+    "darkImage": "http://static.lolesports.com/leagues/lck-cl-black.png",
+    "region": "KOREA",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 29,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110378429156980338"
+      },
+      {
+        "id": "109625523800645158"
+      },
+      {
+        "id": "108211175216687366"
+      },
+      {
+        "id": "107439257586040014"
+      },
+      {
+        "id": "106308351107145908"
+      },
+      {
+        "id": "105562431502825774"
+      }
+    ]
+  },
+  {
+    "id": "105549980953490846",
+    "name": "CBLOL Academy",
+    "slug": "cblol_academy",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/cblol-acad-white.png",
+    "lightImage": "http://static.lolesports.com/leagues/cblol-acad-white.png",
+    "darkImage": "http://static.lolesports.com/leagues/cblol-acad-black.png",
+    "region": "BRAZIL",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 30,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110413232002702589"
+      },
+      {
+        "id": "109523665497010762"
+      },
+      {
+        "id": "108211948453261786"
+      },
+      {
+        "id": "107565607659994755"
+      },
+      {
+        "id": "106269705187845648"
+      },
+      {
+        "id": "105562692792011783"
+      }
+    ]
+  },
+  {
+    "id": "110371976858004491",
+    "name": "North Regional League",
+    "slug": "north_regional_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1684142706102_LRN-COLOR.png",
+    "lightImage": "http://static.lolesports.com/leagues/1684142706102_LRN-COLOR.png",
+    "darkImage": "http://static.lolesports.com/leagues/1684142706103_LRN-COLOR.png",
+    "region": "LATIN AMERICA NORTH",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 31,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110372140231846916"
+      }
+    ]
+  },
+  {
+    "id": "110372322609949919",
+    "name": "South Regional League",
+    "slug": "south_regional_league",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1684147981719_LRS-021.png",
+    "lightImage": "http://static.lolesports.com/leagues/1684147981719_LRS-021.png",
+    "darkImage": "http://static.lolesports.com/leagues/1684147981720_LRS-021.png",
+    "region": "LATIN AMERICA SOUTH",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 32,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "110372454557117766"
+      }
+    ]
+  },
+  {
+    "id": "108001239847565215",
+    "name": "TFT Rising Legends",
+    "slug": "tft_esports",
+    "sport": "lol",
+    "image": "http://static.lolesports.com/leagues/1687221673621_LOGOMARK_NEG.png",
+    "lightImage": "http://static.lolesports.com/leagues/1687221673621_LOGOMARK_NEG.png",
+    "darkImage": "http://static.lolesports.com/leagues/1687221673623_LOGOMARK_POS.png",
+    "region": "INTERNATIONAL",
+    "priority": 1000,
+    "displayPriority": {
+      "position": 33,
+      "status": "not_selected"
+    },
+    "tournaments": [
+      {
+        "id": "109761195185432372"
+      },
+      {
+        "id": "108398603512314614"
+      }
+    ]
+  }
+]
