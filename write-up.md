@@ -150,6 +150,41 @@ Ref. [code](https://github.com/chakrakan/lol-esports-predictions/blob/f0ae5d143a
 
 For every OP champ grabbed, they are rewarded +2 towards their total K-Value as a sign of drafting successfully towards a win.
 
+2. **Side Advantage**
+
+If you've played LoL at a high level, or watched pro-games, you'll come to know that based on the league meta, particular sides have their advantages.
+
+For instance, in a patch where there's an OP champion that has no counters or is a top prio pick, blue team gets first draft and thus can instantly pick that champion for an advantage.
+
+The sides should be given some weight also due to map layout differences.
+
+Blue team has:
+- an easier access to Baron,
+- top side gank paths (tri-brush)
+
+Red team has:
+- easier access to dragon
+- bot side gank path (tri-brush).
+
+Historically, the top lane gank path for the Blue side has been more advantageous than the gank path for the bot side for Red due to the fact that top-lane only has 1 champion.
+
+There is no one else to help you ward, peel or escape from ganks if the blue team were to abuse this extra power while bot lane supports can at least peel or ward to prevent total abuse. To exemplify this, immobile top-lane champions on the red side have worse win-rates than on the blue-side:
+
+![red-blue-top](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/red_blue_top.png)
+![red-blue-bot](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/red_blue_bot.png)
+
+Top lane could have close to ~5% win rate difference based on which side they are playing vs the ~1.5% difference of bot lane.
+
+Plus, the advantages of blue side due to map layout are also within the domain of monster kills.
+
+While the Red side has an advantage to take dragon, there's a higher chance that an all out fight breaks out due to the fact that more players are in bot lane, and it isn't uncommon for a support player to ward dragon around spawn timers. This makes taking dragon always a gamble (TP from top lane, bot and mid rotates come in).
+
+However, careful vision control and positioning on the top side could net a jungler sneak heralds pre baron timer with minimal HP if the kiting is done well, which is to be expected at a pro-level. Herald could lead to first tower advantage (also a feature to be considered) and enable early rotations of lanes.
+
+Last but not least, there's also the aspect of the camera angle, of which the blue side can be referred as the "default" view since tutorials are done in this format, and also the angle creates a trapezium that provides some benefits for blue side viewing angles.
+
+Thus, for teams playing on the red side coming out victorious, they get +5 added to their K-value for playing with a perceived disadvantage
+
 2. **Gold Difference**
 
 This one is pretty straightforward. Gold is the defining currency in the game that is earned through killing minions, getting kills, or objectives. 
@@ -204,17 +239,26 @@ The shorter game durations imply the team being able to accumulate a lead, capit
 
 Loads! I think I went a little insane, but the dopamine rush of getting some bit of data to make sense is _real._
 
-Coming from a full-stack domain, this was my first ML/Data-Science-y project. I was not completely familiar of all the tools available in the toolkit for ML so I had to get accustomed to them over the duration of the 
+Coming from a full-stack domain, this was my first ML/Data-Science-y project. I was not completely familiar with all the tools available in the toolkit for ML so I had to get accustomed to them over the duration of the 
 hackathon.
 
 I also initially started working on the project thinking that the main goal was to create a ML model that can accurately predict who will win a game as the game progresses live, similar to how Riot uses
-XGBoost with event data to display those gorgeous graphs throughtout live games. Towards the last few days of the hackathon, it clicked that we are just ranking teams so I pivoted to the weighted-K elo system.
+XGBoost with event data to display those gorgeous graphs throughout live games. Towards the last few days of the hackathon, it clicked that we are just ranking teams so I pivoted to the weighted-K ELO system.
 
 Apart from limited time to work on the project due to a full-time job and an active lifestyle, there were the usual data-problems to tackle
 
 ![missing-data](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/no_tournament_data.png)
 
 For instance, there were a lot of missing tournaments that were not mapped. We were also working with less data from certain leagues like LPL. 
+
+Some tournaments had teams who don't exist anymore. I could not handle that (for e.g. Worlds 2022 marks Rogue as KOI), but could look into it further with more time.
+
+Tournament data was also unreliable so I had to parse every individual game file for the most accurate information. 
+For example, look at Game ID: `109517090067719731` from LCS Spring 2023. The first game is between C9 and 100T.
+The tournament data suggests that 100T is playing blue side, and C9 is playing red. Blue side ends up losing and red wins — but this is incorrect. The only thing correct in the data was that C9 won the game, but C9 was on blue side, and 100T was on red side as detailed by this [actual VOD](https://www.youtube.com/watch?v=--B5wE7qyZs&t=4801s)
+
+This would have rendered our game data mapped to opposite sides and skewed stats for the respective teams, giving 100T 25 kills that game instead of C9! :O 
+
 Parsing the giant game data files were definitely a challenge and I'm particularly proud of this [binary-search](https://github.com/chakrakan/lol-esports-predictions/blob/f0ae5d143abad4c99ff5df1a1675da0b95e05ecc/app/utils.py#L350)
 function that finds the nearest event given a timestamp (in my case, 300, 600, 900 and game_end intervals). 
 
@@ -231,3 +275,152 @@ Gathering all features and using them + getting to submit things on time!
 ## What's next for K-Weighted ELO Rankings
 
 Leveraging the methods and creating AWS lambdas that can output the exact same data seen in console -> to data being consumed by a front-end that beautifully renders the stats on the client side.
+
+For now, I'm excited to kick back and watch the Worlds 2023 games unravel as I closely keep an eye on how my system's predictions match up with that of the tournament state!
+
+Here are my top 20 teams ranked (rest of the sample outputs of endpoints can be found [here](https://github.com/chakrakan/lol-esports-predictions/blob/main/rankings.md)):
+
+```json
+[
+  {
+    "ELO": 2046.8577886013984,
+    "rank": 1,
+    "team_code": "JDG",
+    "team_id": "99566404852189289",
+    "team_name": "Beijing JDG Intel Esports Club"
+  },
+  {
+    "ELO": 2012.464275432624,
+    "rank": 2,
+    "team_code": "GEN",
+    "team_id": "100205573495116443",
+    "team_name": "Gen.G"
+  },
+  {
+    "ELO": 1919.9164734180035,
+    "rank": 3,
+    "team_code": "LNG",
+    "team_id": "99566404850008779",
+    "team_name": "Suzhou LNG Esports"
+  },
+  {
+    "ELO": 1860.0579421116825,
+    "rank": 4,
+    "team_code": "KT",
+    "team_id": "99566404579461230",
+    "team_name": "kt Rolster"
+  },
+  {
+    "ELO": 1797.700384038097,
+    "rank": 5,
+    "team_code": "T1",
+    "team_id": "98767991853197861",
+    "team_name": "T1"
+  },
+  {
+    "ELO": 1791.2709826772032,
+    "rank": 6,
+    "team_code": "WBG",
+    "team_id": "99566404853058754",
+    "team_name": "WeiboGaming FAW AUDI"
+  },
+  {
+    "ELO": 1783.7383315561797,
+    "rank": 7,
+    "team_code": "PSG",
+    "team_id": "104367068120825486",
+    "team_name": "PSG Talon"
+  },
+  {
+    "ELO": 1776.9631674056816,
+    "rank": 8,
+    "team_code": "BLG",
+    "team_id": "99566404853854212",
+    "team_name": "Bilibili Gaming Pingan Bank"
+  },
+  {
+    "ELO": 1717.4995105154403,
+    "rank": 9,
+    "team_code": "G2",
+    "team_id": "98767991926151025",
+    "team_name": "G2 Esports"
+  },
+  {
+    "ELO": 1705.8893804033885,
+    "rank": 10,
+    "team_code": "DFM",
+    "team_id": "100285330168091787",
+    "team_name": "DetonatioN FocusMe"
+  },
+  {
+    "ELO": 1697.1727279788283,
+    "rank": 11,
+    "team_code": "LLL",
+    "team_id": "105397404796640412",
+    "team_name": "LOUD"
+  },
+  {
+    "ELO": 1689.8250085141908,
+    "rank": 12,
+    "team_code": "HLE",
+    "team_id": "100205573496804586",
+    "team_name": "Hanwha Life Esports"
+  },
+  {
+    "ELO": 1686.7133742561714,
+    "rank": 13,
+    "team_code": "CFO",
+    "team_id": "107700199633958891",
+    "team_name": "CTBC Flying Oyster"
+  },
+  {
+    "ELO": 1672.235368168874,
+    "rank": 14,
+    "team_code": "IW",
+    "team_id": "102235771678061291",
+    "team_name": "DenizBank İstanbul Wildcats"
+  },
+  {
+    "ELO": 1665.6980758161203,
+    "rank": 15,
+    "team_code": "BYG",
+    "team_id": "106269804045322803",
+    "team_name": "Beyond Gaming"
+  },
+  {
+    "ELO": 1648.0566178067927,
+    "rank": 16,
+    "team_code": "NRG",
+    "team_id": "106972778172351142",
+    "team_name": "NRG"
+  },
+  {
+    "ELO": 1646.124131875014,
+    "rank": 17,
+    "team_code": "R7",
+    "team_id": "98767991935149427",
+    "team_name": "Movistar R7"
+  },
+  {
+    "ELO": 1645.733235922413,
+    "rank": 18,
+    "team_code": "FPX",
+    "team_id": "99566404855553726",
+    "team_name": "FunPlus Phoenix"
+  },
+  {
+    "ELO": 1643.4549312778274,
+    "rank": 19,
+    "team_code": "TES",
+    "team_id": "99566404854685458",
+    "team_name": "TOP ESPORTS"
+  },
+  {
+    "ELO": 1639.248068541459,
+    "rank": 20,
+    "team_code": "IG",
+    "team_id": "99566404848691211",
+    "team_name": "Invictus Gaming"
+  }
+]
+```
