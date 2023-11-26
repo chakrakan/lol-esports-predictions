@@ -3,7 +3,6 @@
 > This solution ended up winning out of 1836 participants!
 
 ![](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/winner_2.png)
-![](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/winner.png)
 
 Predicting league of legends team rankings based on in game data and performance.
 
