@@ -1,14 +1,18 @@
-# League of legends — E-Sports Predictions
+# League of legends — E-Sports Predictions - powered by Riot Games & AWS
 
 > This solution ended up winning out of 1836 participants!
 
 ![](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/winner_2.png)
 
-Predicting league of legends team rankings based on in game data and performance.
+Predicting league of legends team rankings based on in game data and performance provided by Riot Games and AWS.
 
 This solution was:
-- able to predict 14/20 teams in the top 20
-- able to accurately predict 
+- able to correctly include 14/20 teams in the top 20
+- able to accurately include the top 8 teams
+
+![](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/rankings.png)
+
+T1 ended up cliching the winning spot in a miraculous and deserving run where every player was able to outshine the rest of the competition. 
 
 ### Running
 
