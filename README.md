@@ -8,7 +8,7 @@ Predicting league of legends team rankings based on in game data and performance
 
 This solution was:
 - able to correctly include 14/20 teams in the top 20
-- able to accurately include the top 8 teams
+- able to accurately include 7/8 top teams (Left: Actual, Right: Prediction)
 
 ![](https://raw.githubusercontent.com/chakrakan/lol-esports-predictions/main/analysis/doc-assets/rankings.png)
 
